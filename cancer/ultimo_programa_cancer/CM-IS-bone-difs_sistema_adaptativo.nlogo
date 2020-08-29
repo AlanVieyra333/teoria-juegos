@@ -92,6 +92,8 @@ globals [
   ProbOfAttackSuccesByCd8
   ;No.-of-initial-cd8-cells
   ;------------------------------------ new variables
+  filename-template
+  total-files
   file-num
 ] ; some counts
 
@@ -169,7 +171,11 @@ end
 
 ;------------------------------------- setup
 to setup
+  ; Lecture of variable input files. Files eg. {"input_values1.csv", "input_values2.csv", ... , "input_valuesN.csv"} -> "input-values"
+  set filename-template "data/debil-debil/input_values"
+  set total-files 1
   set file-num 1
+
   init
 end
 
@@ -246,12 +252,12 @@ to init
   file-close-all
 
   ;read of input from files
-  set_input (word "data/fuerte-debil/input_values" file-num ".csv")
+  set_input (word filename-template file-num ".csv")
   ;initial conditions of IS and CC cells
   ; -16 0 are the coordinates of the center of the primary tumor world
   setup1 -16 0 -1 1
 
-  ; coloring the parts of the world
+  ; coloring of four parts of the world
    if  graficos
     [
       let p1 0
@@ -460,7 +466,7 @@ to go
     output_files
     file-close-all
 
-    ifelse file-num < 150 [
+    ifelse file-num < total-files [
       set file-num file-num + 1
       init
     ] [
@@ -474,7 +480,7 @@ to go
     user-message "Demasiado grande el tumor"
     file-close-all
 
-    ifelse file-num < 150 [
+    ifelse file-num < total-files [
       set file-num file-num + 1
       init
     ] [
