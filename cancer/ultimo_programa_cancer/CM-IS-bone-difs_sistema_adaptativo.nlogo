@@ -30,43 +30,69 @@ macrosb-own [ macr? tam1? tam2? ]; macr? is a macrophage
 
 turtles-own [ age ] ; cell age
 
-globals [ tan1 tan2 tam1 tam2 treg helpp helpn T-Cn T-Cp Hamilton HamiltonTu HamiltonIS i j aij prod edad l prob min-tumors Q P counter indicator file_number
-data
- No.-of-initial-tumor-cells
-No.-of-initial-neutrophils-cell
-   No.-of-initial-macrophages-cells
+globals [
+  tan1
+  tan2
+  tam1
+  tam2
+  treg
+  helpp
+  helpn
+  T-Cn
+  T-Cp
+  Hamilton
+  HamiltonTu
+  HamiltonIS
+  i
+  j
+  aij
+  prod
+  edad
+  l
+  prob
+  min-tumors
+  Q
+  P
+  counter
+  indicator
+  file_number
+  data
+  No.-of-initial-tumor-cells
+  No.-of-initial-neutrophils-cell
+  No.-of-initial-macrophages-cells
   No.-of-initial-natural-killers-cells
-   recruit-neutrophils
+  recruit-neutrophils
   ProbOfSuccesOfInterac-NeutTum
   ProbOfChange-to-tan1-or-tan2
   ProbOfSuccesOf-tan1
   No-of-desactivating-tumor-cells-by-tan1
   ProbOfSuccesOf-tam1
- recruit-macrophages
- ProbOfSuccesOfInterac-MacrTum
- ProbOfChange-to-tam1-or-tam2
- recruit-natural-killers
+  recruit-macrophages
+  ProbOfSuccesOfInterac-MacrTum
+  ProbOfChange-to-tam1-or-tam2
+  recruit-natural-killers
   ProbOfSAttackSuccesByNk
- ProbOfSuccesOf-tan2
- No-of-activating-tumor-cells-by-tan2
+  ProbOfSuccesOf-tan2
+  No-of-activating-tumor-cells-by-tan2
   ProbOfSuccesOf-tam2
- No-of-activating-tumor-cells-by-tam2
+  No-of-activating-tumor-cells-by-tam2
   max-tumors
-No.ticks
-max-age-tam1
-max-age-tam2
-max-age-tan1
-max-age-tan2
-max-age-nk
+  No.ticks
+  max-age-tam1
+  max-age-tam2
+  max-age-tan1
+  max-age-tan2
+  max-age-nk
 
-No.-of-initial-treg-cells
-No.-of-initial-helper-cells
+  No.-of-initial-treg-cells
+  No.-of-initial-helper-cells
   ProbOfSuccesOfInterac-Th-Tum
   ProbOfChange-thcells-to-thcells-
   ProbOfChange-thcells-to-Cd8
   ProbOfAttackSuccesByCd8
-;No.-of-initial-cd8-cells
-;------------------------------------ new variables
+  ;No.-of-initial-cd8-cells
+  ;------------------------------------ new variables
+  file-num
 ] ; some counts
 
 
@@ -143,11 +169,85 @@ end
 
 ;------------------------------------- setup
 to setup
-  clear-all
+  set file-num 1
+  init
+end
+
+to clear-vars
+  set tan1 0
+  set tan2 0
+  set tam1 0
+  set tam2 0
+  set treg 0
+  set helpp 0
+  set helpn 0
+  set T-Cn 0
+  set T-Cp 0
+  set Hamilton 0
+  set HamiltonTu 0
+  set HamiltonIS 0
+  set i 0
+  set j 0
+  set aij 0
+  set prod 0
+  set edad 0
+  set l 0
+  set prob 0
+  set min-tumors 0
+  set Q 0
+  set P 0
+  set counter 0
+  set indicator 0
+  set file_number 0
+  set data 0
+  set No.-of-initial-tumor-cells 0
+  set No.-of-initial-neutrophils-cell 0
+  set No.-of-initial-macrophages-cells 0
+  set No.-of-initial-natural-killers-cells 0
+  set recruit-neutrophils 0
+  set ProbOfSuccesOfInterac-NeutTum 0
+  set ProbOfChange-to-tan1-or-tan2 0
+  set ProbOfSuccesOf-tan1 0
+  set No-of-desactivating-tumor-cells-by-tan1 0
+  set ProbOfSuccesOf-tam1 0
+  set recruit-macrophages 0
+  set ProbOfSuccesOfInterac-MacrTum 0
+  set ProbOfChange-to-tam1-or-tam2 0
+  set recruit-natural-killers 0
+  set ProbOfSAttackSuccesByNk 0
+  set ProbOfSuccesOf-tan2 0
+  set No-of-activating-tumor-cells-by-tan2 0
+  set ProbOfSuccesOf-tam2 0
+  set No-of-activating-tumor-cells-by-tam2 0
+  set max-tumors 0
+  set No.ticks 0
+  set max-age-tam1 0
+  set max-age-tam2 0
+  set max-age-tan1 0
+  set max-age-tan2 0
+  set max-age-nk 0
+  set No.-of-initial-treg-cells 0
+  set No.-of-initial-helper-cells 0
+  set ProbOfSuccesOfInterac-Th-Tum 0
+  set ProbOfChange-thcells-to-thcells- 0
+  set ProbOfChange-thcells-to-Cd8 0
+  set ProbOfAttackSuccesByCd8 0
+end
+
+to init
+  clear-vars
+  clear-ticks
+  clear-turtles
+  clear-patches
+  clear-drawing
+  clear-all-plots
+  clear-output
+
   file-close-all
- ;read of input from files
-  set_input
-   ;initial conditions of IS and CC cells
+
+  ;read of input from files
+  set_input (word "data/fuerte-debil/input_values" file-num ".csv")
+  ;initial conditions of IS and CC cells
   ; -16 0 are the coordinates of the center of the primary tumor world
   setup1 -16 0 -1 1
 
@@ -177,21 +277,20 @@ to setup
   set file_number date-and-time
   print_file "primary_tumor/primary tumor" file_number
   print_file "bone/bone tumor" file_number
-print_file_hamilton
+  print_file_hamilton
   ;write initial data to files
   set counter 0
     print_data_primary counter file_number
   print_data_bone counter file_number
   ;initialize variables
   set hamilton 0
-set HamiltonTu 0
- set  HamiltonIS 0
+  set HamiltonTu 0
+  set  HamiltonIS 0
 
   ; metastasis
    set indicator metastasis_probabilities
   ;show indicator
 end
-
 
 ; set up  initial conditions of IS and CC cells
 ; a, b tags of sections
@@ -275,9 +374,9 @@ to-report cordinates[sign crd]
 end
 
 ;read of all initial values from a file
-to set_input
+to set_input[filename]
   ;open file wich contains input values
-  file-open "input_values1.csv"
+  file-open filename
 
 set data csv:from-row file-read-line
 
@@ -360,7 +459,13 @@ to go
   [
     output_files
     file-close-all
-    stop
+
+    ifelse file-num < 150 [
+      set file-num file-num + 1
+      init
+    ] [
+      stop
+    ]
   ]
   ;too large the tumor
   if count tumors >= max-tumors
@@ -368,12 +473,20 @@ to go
     output_files
     user-message "Demasiado grande el tumor"
     file-close-all
-    stop ]
- ;too small the tumor
- ;if count tumors < min-tumors
+
+    ifelse file-num < 150 [
+      set file-num file-num + 1
+      init
+    ] [
+      stop
+    ]
+  ]
+  ;too small the tumor
+  ;if count tumors < min-tumors
   ;[
   ;  output_files
-   ; user-message "Tumor casi imperceptible" stop ]
+  ;  user-message "Tumor casi imperceptible" stop
+  ;]
 
 
    ; Cell actions
@@ -1877,7 +1990,7 @@ false
 Polygon -7500403 true true 270 75 225 30 30 225 75 270
 Polygon -7500403 true true 30 75 75 30 270 225 225 270
 @#$#@#$#@
-NetLogo 6.0.4
+NetLogo 6.1.1
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@
