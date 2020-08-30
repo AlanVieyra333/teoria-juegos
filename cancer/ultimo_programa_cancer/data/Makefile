@@ -1,12 +1,11 @@
-start:
-	bash build.sh
-	make clean
+PROJ = gen-input-data.a
+MAIN = gen-input-data.c
 
-run: build
-	./out.a
+run: $(PROJ)
+	./$(PROJ)
 
-build:
-	gcc -o out.a *.c
+$(PROJ): $(MAIN)
+	gcc -o $@ $<
 
 clean:
-	rm -rf **/*.a
+	rm -rf $(PROJ) *.a **/*.a *.o **/*.o debil-* medio-* fuerte-*
