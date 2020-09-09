@@ -71,7 +71,6 @@ globals [
   Q
   P
   counter
-  indicator
   file_number
   data
   No.-of-initial-tumor-cells
@@ -112,6 +111,10 @@ globals [
   filename-template
   total-files
   file-num
+  can_there_be_metastasis
+  are_there_metastasis_bone
+  are_there_metastasis_lung
+  are_there_metastasis_liver
 ] ; some counts
 
 
@@ -189,9 +192,9 @@ end
 ;------------------------------------- setup
 to setup
   ; Lecture of variable input files. Files eg. {"input_values1.csv", "input_values2.csv", ... , "input_valuesN.csv"} -> "input-values"
-  set filename-template "data/debil-medio/input_values"
+  set filename-template "data/medio-fuerte/input_values"
   set total-files 1
-  set file-num 8
+  set file-num random 150
 
   init
 end
@@ -220,7 +223,6 @@ to clear-vars
   set Q 0
   set P 0
   set counter 0
-  set indicator 0
   set file_number 0
   set data 0
   set No.-of-initial-tumor-cells 0
@@ -255,6 +257,10 @@ to clear-vars
   set ProbOfChange-thcells-to-thcells- 0
   set ProbOfChange-thcells-to-Cd8 0
   set ProbOfAttackSuccesByCd8 0
+  set can_there_be_metastasis false
+  set are_there_metastasis_bone false
+  set are_there_metastasis_lung false
+  set are_there_metastasis_liver false
 end
 
 to init
@@ -303,21 +309,50 @@ to init
   ;create the files corresponding to each organ
   ;file number is to distinguish the files of each simulation
   set file_number date-and-time
-  print_file "primary_tumor/primary tumor" file_number
-  print_file "bone/bone tumor" file_number
+  print_file "log/primary_tumor/primary tumor" file_number
+  print_file "log/bone/bone tumor" file_number
   print_file_hamilton
   ;write initial data to files
   set counter 0
-    print_data_primary counter file_number
+  print_data_primary counter file_number
   print_data_bone counter file_number
   ;initialize variables
   set hamilton 0
   set HamiltonTu 0
   set HamiltonIS 0
+end
 
-  ; metastasis
-   set indicator metastasis_probabilities
-  ;show indicator
+; Init metastasis bone
+to setup_metastasis_bone
+  if can_there_be_metastasis = true [
+    set are_there_metastasis_bone are_there_metastasis_site "bone"
+
+    if are_there_metastasis_bone = true [
+      setupbone 1 1
+    ]
+  ]
+end
+
+; Init metastasis lung
+to setup_metastasis_lung
+  if can_there_be_metastasis = true [
+    set are_there_metastasis_lung are_there_metastasis_site "lung"
+
+    if are_there_metastasis_lung = true [
+      setuplung -1 -1
+    ]
+  ]
+end
+
+; Init metastasis liver
+to setup_metastasis_liver
+  if can_there_be_metastasis = true [
+    set are_there_metastasis_liver are_there_metastasis_site "liver"
+
+    if are_there_metastasis_liver = true [
+      setupliver 1 -1
+    ]
+  ]
 end
 
 ; set up  initial conditions of IS and CC cells
@@ -339,8 +374,8 @@ to setup1[cordx cordy a b]
     let y cordinates b -1
 
     setxy x y
-   neutrs-cells
-   set age 0
+    neutrs-cells
+    set age 0
   ]
 
   create-macros No.-of-initial-macrophages-cells
@@ -543,11 +578,11 @@ to go
 
 
    ; Cell actions
-  ask tumors [
-    mitosis-tumors tumors
-    set age age + 0.5
-    set color blue - 0.25 * age
-  ]
+  ;ask tumors [
+  ;  mitosis-tumors tumors
+  ;  set age age + 0.5
+  ;  set color blue - 0.25 * age
+  ;]
 
   ask neutrs
   [
@@ -580,8 +615,8 @@ to go
    set age age + 1
   ]
 
-; recruit of innate immune system cells
-   let x cordinates -1 1
+  ; recruit of innate immune system cells
+  let x cordinates -1 1
   ;create-neutrs recruit-neutrophils [ neutrs-cells setxy random-xcor max-pycor set age 0 ]
   create-neutrs recruit-neutrophils [ neutrs-cells setxy x 32 set age 0 ]
 
@@ -597,21 +632,30 @@ to go
   hamilton-1
 
   ;METASTASIS
-  if ticks >= 10  and  item 0 indicator = 1 [
+  set can_there_be_metastasis can_there_be_general_metastasis
+
+  ifelse are_there_metastasis_bone = true [
     metastasisBone
+  ] [
+    ; Try to start bone metastasis
+    setup_metastasis_bone
   ]
-
-  if ticks >= 16 and item 0 indicator = 1 [
+  ifelse are_there_metastasis_lung = true [
     metastasisLung
+  ] [
+    ; Try to start lung metastasis
+    setup_metastasis_lung
   ]
-
-  if ticks >= 18 and item 0 indicator = 1 [
+  ifelse are_there_metastasis_liver = true [
     metastasisLiver
+  ] [
+    ; Try to start liver metastasis
+    setup_metastasis_liver
   ]
   tick
 
   ;write current data to files
-   set counter counter + 1
+  set counter counter + 1
   print_data_primary counter file_number
   print_data_bone counter file_number
 
@@ -620,12 +664,14 @@ end
 ;___________________________________ output files
 ;export all deafault netlogo output files
 to output_files
-    export-view (word "primary_tumor/modelo_cancer" file_number ".png")
-    export-output (word "primary_tumor/salida_modelo_cancer" file_number ".csv")
-    export-world (word "primary_tumor/modelo_hamilton" file_number ".csv")
-   export-all-plots (word "primary_tumor/primary tumor graphs " file_number ".csv")
-    export-plot "No. of tumor cells" (word "primary_tumor/primary_tumor_graphs" file_number ".csv")
-  export-plot "bone tumor cells" (word "bone/primary_tumor_graphs" file_number ".csv")
+  export-view (word "log/primary_tumor/modelo_cancer" file_number ".png")
+  export-output (word "log/primary_tumor/salida_modelo_cancer" file_number ".csv")
+  export-world (word "log/primary_tumor/modelo_hamilton" file_number ".csv")
+  export-all-plots (word "log/primary_tumor/primary tumor graphs " file_number ".csv")
+  export-plot "Primary tumor cells" (word "log/primary_tumor/primary_tumor_graphs" file_number ".csv")
+  export-plot "Bone tumor cells" (word "log/bone/primary_tumor_graphs" file_number ".csv")
+  export-plot "Lung tumor cells" (word "log/lung/primary_tumor_graphs" file_number ".csv")
+  export-plot "Liver tumor cells" (word "log/liver/primary_tumor_graphs" file_number ".csv")
 end
 
 
@@ -1052,7 +1098,7 @@ file-open (word string number ".csv")
 end
 
 to print_file_hamilton
-  file-open (word "primary_tumor/Hamilton" file_number ".csv")
+  file-open (word "log/primary_tumor/Hamilton" file_number ".csv")
   file-type " "
   file-type ","
   file-type "HamiltonTu"
@@ -1064,7 +1110,7 @@ to print_file_hamilton
 end
 
 to print_data_primary [cont number ]
-  file-open (word "primary_tumor/primary tumor" number ".csv")
+  file-open (word "log/primary_tumor/primary tumor" number ".csv")
   file-type "time"
   file-type cont
   file-type ","
@@ -1083,7 +1129,7 @@ to print_data_primary [cont number ]
 end
 
 to print_data_hamilton [cont]
-  file-open (word "primary_tumor/Hamilton" file_number ".csv")
+  file-open (word "log/primary_tumor/Hamilton" file_number ".csv")
   file-type "time"
   file-type cont
   file-type ","
@@ -1096,16 +1142,76 @@ to print_data_hamilton [cont]
 end
 
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;here decide if metastasis occurs
+to-report can_there_be_general_metastasis
+  let higher_threshold 3.0  ; Cancer 3 times bigger/smaller than IS  (Modify if necessary)
+  let lower_threshold 1.0 / higher_threshold
+  let proportion 0.0
+  let probability 0.0
+  let a random 100
+  let result false
+
+  ifelse count natuks > 0 [
+    set proportion count tumors / count natuks
+  ][
+    set proportion higher_threshold
+  ]
+
+  (ifelse
+    proportion >= higher_threshold[  ; Cancer 3 times bigger than IS
+      set probability 1.0
+    ]
+    proportion <= lower_threshold [  ; Cancer 3 times smaller than IS
+      set probability 0.0
+    ]
+    [
+      set probability (proportion - lower_threshold) / (higher_threshold - lower_threshold)
+    ]
+  )
+
+  if a <= probability * 100 [
+    set result true
+  ]
+
+  report result
+end
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;here decide which metastasis occurs
+to-report are_there_metastasis_site [metastasis_site]
+  let result false
+  let a random 10000
+
+  (ifelse
+    metastasis_site = "bone" [
+      if a <= 953 [  ; 9.53 %  (213/2235)
+        set result true
+      ]
+    ]
+    metastasis_site = "lung" [
+      if a <= 1105 [  ; 11.05 %  (247/2235)
+        set result true
+      ]
+    ]
+    metastasis_site = "liver" [
+      if a <= 975 [  ; 9.75 %  (218/2235)
+        set result true
+      ]
+    ]
+  )
+
+  report result
+end
+
+
 ;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 ;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 ;Bone
 ;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 ;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 to metastasisBone
-  ;if ticks = 10 [setupbone 1 0]
-  if ticks = 10 [setupbone 1 1]
-
-   ; Cell actions
+  ; Cell actions
   ask tumorsb [
     mitosis-tumors tumorsb
     set age age + 0.5
@@ -1337,7 +1443,7 @@ end
 ;______________________________________________________ print files
 
 to print_data_bone [cont number]
-  file-open (word "bone/bone tumor" number ".csv")
+  file-open (word "log/bone/bone tumor" number ".csv")
   file-type "time"
   file-type cont
   file-type ","
@@ -1352,24 +1458,6 @@ to print_data_bone [cont number]
 end
 
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;here decide which metastasis occurs
-to-report metastasis_probabilities
-  let a random 100
-  let lp []
-  ;corresponding to bone
-  ifelse  a <= 34
-  [
-    set lp lput 1 lp
-  ]
-  [
-    set lp lput 0 lp
-  ]
- ;show lp
-  report lp
-
-end
-
 ;;;;;;;;;;;;;;;;;;
 
 ;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1378,9 +1466,7 @@ end
 ;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 ;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 to metastasisLung
-  if ticks = 16 [setuplung -1 -1]
-
-   ; Cell actions
+  ; Cell actions
   ask tumorsLg [
     mitosis-tumors tumorsLg
     set age age + 0.5
@@ -1613,9 +1699,7 @@ end
 ;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 ;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 to metastasisLiver
-  if ticks = 18 [setupliver 1 -1]
-
-   ; Cell actions
+  ; Cell actions
   ask tumorsLv [
     mitosis-tumors tumorsLv
     set age age + 0.5
@@ -1928,6 +2012,17 @@ count tumors
 11
 
 MONITOR
+181
+323
+319
+368
+No. files processed
+(word file-num \"/\" total-files)
+17
+1
+11
+
+MONITOR
 12
 117
 125
@@ -1939,11 +2034,11 @@ count neutrs
 11
 
 PLOT
-945
-58
-1456
-406
-No. of tumor cells
+913
+12
+1386
+360
+Primary tumor cells
 ticks
 number-cells
 0.0
@@ -1954,7 +2049,7 @@ true
 true
 "" ""
 PENS
-"Tumor-cells_1" 1.0 0 -14454117 true "" "plot count tumors"
+"tumor-cells" 1.0 0 -14454117 true "" "plot count tumors"
 "tan1-cells" 1.0 0 -10402772 true "" "plot tan1"
 "tan2-cells" 1.0 0 -3889007 true "" "plot tan2"
 "tam1-cells" 1.0 0 -13210332 true "" "plot tam1"
@@ -1984,7 +2079,7 @@ tan2
 11
 
 MONITOR
-189
+180
 142
 318
 187
@@ -1995,10 +2090,10 @@ count macros
 11
 
 MONITOR
-189
-194
-246
+182
+202
 239
+247
 tam1
 tam1
 17
@@ -2006,10 +2101,10 @@ tam1
 11
 
 MONITOR
-259
-192
-316
-237
+261
+201
+318
+246
 tam2
 tam2
 17
@@ -2017,10 +2112,10 @@ tam2
 11
 
 MONITOR
-196
-260
-316
-305
+181
+263
+319
+308
 No. natural killers
 count natuks
 17
@@ -2045,10 +2140,10 @@ NIL
 0
 
 SWITCH
-219
-50
-354
-83
+180
+55
+318
+88
 stop-replication?
 stop-replication?
 1
@@ -2067,10 +2162,10 @@ Hamilton
 11
 
 PLOT
-413
-516
-858
-775
+386
+525
+883
+784
 Ising-like hamiltonian function
 Time (Netlogo ticks)
 Energy
@@ -2086,30 +2181,50 @@ PENS
 "Immune Sys" 1.0 0 -14454117 true "" "plot HamiltonIS"
 
 TEXTBOX
-460
-18
-610
-36
+471
+25
+621
+43
 Primary tumor
 11
 0.0
 1
 
 TEXTBOX
-723
-26
-906
-44
+715
+27
+898
+45
 Metastasis Bone
 11
 0.0
 1
 
+TEXTBOX
+464
+268
+614
+286
+Metastasis Lung
+11
+0.0
+1
+
+TEXTBOX
+716
+273
+866
+291
+Metastasis Liver
+11
+0.0
+1
+
 SWITCH
-221
-88
-324
-121
+180
+97
+318
+130
 graficos
 graficos
 0
@@ -2117,13 +2232,13 @@ graficos
 -1000
 
 PLOT
-949
-494
-1453
-761
-bone tumor cells
+1409
+10
+1880
+358
+Bone tumor cells
 ticks
-mber-cells
+number-cells
 0.0
 10.0
 0.0
@@ -2138,6 +2253,52 @@ PENS
 "tam1-cells" 1.0 0 -15040220 true "" "plot tam1"
 "tam2-cells" 1.0 0 -8330359 true "" "plot tam2"
 "natural- killers" 1.0 0 -5298144 true "" "plot  count natuksb"
+
+PLOT
+914
+387
+1385
+735
+Lung tumor cells
+ticks
+number-cells
+0.0
+10.0
+0.0
+10.0
+true
+true
+"" ""
+PENS
+"tumor-cells" 1.0 0 -14985354 true "" "plot count tumorsLg"
+"tan1-cells" 1.0 0 -10146808 true "" "plot tan1"
+"tan2-cells" 1.0 0 -3889007 true "" "plot tan2"
+"tam1-cells" 1.0 0 -15040220 true "" "plot tam1"
+"tam2-cells" 1.0 0 -8330359 true "" "plot tam2"
+"natural- killers" 1.0 0 -5298144 true "" "plot  count natuksLg"
+
+PLOT
+1410
+388
+1881
+736
+Liver tumor cells
+ticks
+number-cells
+0.0
+10.0
+0.0
+10.0
+true
+true
+"" ""
+PENS
+"tumor-cells" 1.0 0 -14985354 true "" "plot count tumorsLv"
+"tan1-cells" 1.0 0 -10146808 true "" "plot tan1"
+"tan2-cells" 1.0 0 -3889007 true "" "plot tan2"
+"tam1-cells" 1.0 0 -15040220 true "" "plot tam1"
+"tam2-cells" 1.0 0 -8330359 true "" "plot tam2"
+"natural- killers" 1.0 0 -5298144 true "" "plot  count natuksLv"
 
 MONITOR
 12
