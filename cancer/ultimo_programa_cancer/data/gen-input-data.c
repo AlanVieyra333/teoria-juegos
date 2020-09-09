@@ -6,30 +6,30 @@
 #include <time.h>
 
 #define TOTAL_FILES 150
-#define NO_TICKS 20
+#define NO_TICKS 11
 
 char* levels[3] = {"debil", "medio", "fuerte"};
 typedef enum { WEAK, MEDIUM, STRONG } level_t;
 FILE* f;
 
-void gen_weak_weak() {
-  fprintf(f, "No.-of-initial-tumor-cells,%i\n", rand() % 34);
-  fprintf(f, "No.-of-initial-neutrophils-cell,%i\n", rand() % 34);
-  fprintf(f, "No.-of-initial-macrophages-cells,%i\n", rand() % 34);
-  fprintf(f, "No.-of-initial-natural-killers-cells,%i\n", rand() % 34);
-  fprintf(f, "recruit-neutrophils,%i\n", rand() % 34);
-  fprintf(f, "ProbOfSuccesOfInterac-NeutTum,%i\n", rand() % 34);
-  fprintf(f, "ProbOfChange-to-tan1-or-tan2,%i\n", rand() % 34);
-  fprintf(f, "ProbOfSuccesOf-tan1,%i\n", rand() % 34);
-  fprintf(f, "No-of-desactivating-tumor-cells-by-tan1,%i\n", rand() % 34);
-  fprintf(f, "ProbOfSuccesOf-tam1,%i\n", rand() % 34);
-  fprintf(f, "recruit-macrophages,%i\n", rand() % 34);
-  fprintf(f, "ProbOfSuccesOfInterac-MacrTum,%i\n", rand() % 34);
-  fprintf(f, "ProbOfChange-to-tam1-or-tam2,%i\n", rand() % 34);
-  fprintf(f, "recruit-natural-killers,%i\n", rand() % 34);
-  fprintf(f, "ProbOfSAttackSuccesByNk,%i\n", rand() % 34);
-  fprintf(f, "No-of-activating-tumor-cells-by-tan2,%i\n", rand() % 34);
-  fprintf(f, "No-of-activating-tumor-cells-by-tam2,%i\n", rand() % 34);
+void gen(int is_level, int cancer_level) {
+  fprintf(f, "No.-of-initial-tumor-cells,%i\n", rand() % 34 + cancer_level);
+  fprintf(f, "No.-of-initial-neutrophils-cell,%i\n", rand() % 34 + is_level);
+  fprintf(f, "No.-of-initial-macrophages-cells,%i\n", rand() % 34 + is_level);
+  fprintf(f, "No.-of-initial-natural-killers-cells,%i\n", rand() % 34 + is_level);
+  fprintf(f, "recruit-neutrophils,%i\n", rand() % 34 + is_level);
+  fprintf(f, "ProbOfSuccesOfInterac-NeutTum,%i\n", rand() % 34 + is_level);
+  fprintf(f, "ProbOfChange-to-tan1-or-tan2,%i\n", rand() % 34 + is_level);
+  fprintf(f, "ProbOfSuccesOf-tan1,%i\n", rand() % 34 + is_level);
+  fprintf(f, "No-of-desactivating-tumor-cells-by-tan1,%i\n", rand() % 34 + is_level);
+  fprintf(f, "ProbOfSuccesOf-tam1,%i\n", rand() % 34 + is_level);
+  fprintf(f, "recruit-macrophages,%i\n", rand() % 34 + is_level);
+  fprintf(f, "ProbOfSuccesOfInterac-MacrTum,%i\n", rand() % 34 + is_level);
+  fprintf(f, "ProbOfChange-to-tam1-or-tam2,%i\n", rand() % 34 + is_level);
+  fprintf(f, "recruit-natural-killers,%i\n", rand() % 34 + is_level);
+  fprintf(f, "ProbOfSAttackSuccesByNk,%i\n", rand() % 34 + is_level);
+  fprintf(f, "No-of-activating-tumor-cells-by-tan2,%i\n", rand() % 34 + cancer_level);
+  fprintf(f, "No-of-activating-tumor-cells-by-tam2,%i\n", rand() % 34 + cancer_level);
   fprintf(f, "max-tumors,5000\n");
   fprintf(f, "No.ticks,%d\n", NO_TICKS);
   fprintf(f, "max-age-tam1,10\n");
@@ -37,267 +37,11 @@ void gen_weak_weak() {
   fprintf(f, "max-age-tan1,10\n");
   fprintf(f, "max-age-tan2,10\n");
   fprintf(f, "max-age-nk,10\n");
-  fprintf(f, "No.-of-initial-treg-cells,%i\n", rand() % 34);
-  fprintf(f, "No.-of-initial-helper-cells,%i\n", rand() % 34);
-  fprintf(f, "ProbOfSuccesOfInterac-Th-Tum,%i\n", rand() % 34);
-  fprintf(f, "ProbOfChange-thcells-to-thcells-,%i\n", rand() % 34);
-  fprintf(f, "ProbOfAttackSuccesByCd8,%i\n", rand() % 34);
-}
-
-void gen_weak_medium() {
-  fprintf(f, "No.-of-initial-tumor-cells,%i\n", rand() % 34 + 33);
-  fprintf(f, "No.-of-initial-neutrophils-cell,%i\n", rand() % 34);
-  fprintf(f, "No.-of-initial-macrophages-cells,%i\n", rand() % 34);
-  fprintf(f, "No.-of-initial-natural-killers-cells,%i\n", rand() % 34);
-  fprintf(f, "recruit-neutrophils,%i\n", rand() % 34);
-  fprintf(f, "ProbOfSuccesOfInterac-NeutTum,%i\n", rand() % 34);
-  fprintf(f, "ProbOfChange-to-tan1-or-tan2,%i\n", rand() % 34 + 33);
-  fprintf(f, "ProbOfSuccesOf-tan1,%i\n", rand() % 34);
-  fprintf(f, "No-of-desactivating-tumor-cells-by-tan1,%i\n", rand() % 34);
-  fprintf(f, "ProbOfSuccesOf-tam1,%i\n", rand() % 34);
-  fprintf(f, "recruit-macrophages,%i\n", rand() % 34);
-  fprintf(f, "ProbOfSuccesOfInterac-MacrTum,%i\n", rand() % 34);
-  fprintf(f, "ProbOfChange-to-tam1-or-tam2,%i\n", rand() % 34 + 33);
-  fprintf(f, "recruit-natural-killers,%i\n", rand() % 34);
-  fprintf(f, "ProbOfSAttackSuccesByNk,%i\n", rand() % 34 + 33);
-  fprintf(f, "No-of-activating-tumor-cells-by-tan2,%i\n", rand() % 34 + 33);
-  fprintf(f, "No-of-activating-tumor-cells-by-tam2,%i\n", rand() % 34 + 33);
-  fprintf(f, "max-tumors,5000\n");
-  fprintf(f, "No.ticks,%d\n", NO_TICKS);
-  fprintf(f, "max-age-tam1,10\n");
-  fprintf(f, "max-age-tam2,10\n");
-  fprintf(f, "max-age-tan1,10\n");
-  fprintf(f, "max-age-tan2,10\n");
-  fprintf(f, "max-age-nk,10\n");
-  fprintf(f, "No.-of-initial-treg-cells,%i\n", rand() % 34);
-  fprintf(f, "No.-of-initial-helper-cells,%i\n", rand() % 34);
-  fprintf(f, "ProbOfSuccesOfInterac-Th-Tum,%i\n", rand() % 34);
-  fprintf(f, "ProbOfChange-thcells-to-thcells-,%i\n", rand() % 34);
-  fprintf(f, "ProbOfAttackSuccesByCd8,%i\n", rand() % 34 + 33);
-}
-
-void gen_weak_strong() {
-  fprintf(f, "No.-of-initial-tumor-cells,%i\n", rand() % 35 + 66);
-  fprintf(f, "No.-of-initial-neutrophils-cell,%i\n", rand() % 34);
-  fprintf(f, "No.-of-initial-macrophages-cells,%i\n", rand() % 34);
-  fprintf(f, "No.-of-initial-natural-killers-cells,%i\n", rand() % 34);
-  fprintf(f, "recruit-neutrophils,%i\n", rand() % 34);
-  fprintf(f, "ProbOfSuccesOfInterac-NeutTum,%i\n", rand() % 34);
-  fprintf(f, "ProbOfChange-to-tan1-or-tan2,%i\n", rand() % 35 + 66);
-  fprintf(f, "ProbOfSuccesOf-tan1,%i\n", rand() % 34);
-  fprintf(f, "No-of-desactivating-tumor-cells-by-tan1,%i\n", rand() % 34);
-  fprintf(f, "ProbOfSuccesOf-tam1,%i\n", rand() % 34);
-  fprintf(f, "recruit-macrophages,%i\n", rand() % 34);
-  fprintf(f, "ProbOfSuccesOfInterac-MacrTum,%i\n", rand() % 34);
-  fprintf(f, "ProbOfChange-to-tam1-or-tam2,%i\n", rand() % 35 + 66);
-  fprintf(f, "recruit-natural-killers,%i\n", rand() % 34);
-  fprintf(f, "ProbOfSAttackSuccesByNk,%i\n", rand() % 35 + 66);
-  fprintf(f, "No-of-activating-tumor-cells-by-tan2,%i\n", rand() % 35 + 66);
-  fprintf(f, "No-of-activating-tumor-cells-by-tam2,%i\n", rand() % 35 + 66);
-  fprintf(f, "max-tumors,5000\n");
-  fprintf(f, "No.ticks,%d\n", NO_TICKS);
-  fprintf(f, "max-age-tam1,10\n");
-  fprintf(f, "max-age-tam2,10\n");
-  fprintf(f, "max-age-tan1,10\n");
-  fprintf(f, "max-age-tan2,10\n");
-  fprintf(f, "max-age-nk,10\n");
-  fprintf(f, "No.-of-initial-treg-cells,%i\n", rand() % 34);
-  fprintf(f, "No.-of-initial-helper-cells,%i\n", rand() % 34);
-  fprintf(f, "ProbOfSuccesOfInterac-Th-Tum,%i\n", rand() % 34);
-  fprintf(f, "ProbOfChange-thcells-to-thcells-,%i\n", rand() % 34);
-  fprintf(f, "ProbOfAttackSuccesByCd8,%i\n", rand() % 35 + 66);
-}
-
-void gen_medium_weak() {
-  fprintf(f, "No.-of-initial-tumor-cells,%i\n", rand() % 34);
-  fprintf(f, "No.-of-initial-neutrophils-cell,%i\n", rand() % 34 + 33);
-  fprintf(f, "No.-of-initial-macrophages-cells,%i\n", rand() % 34 + 33);
-  fprintf(f, "No.-of-initial-natural-killers-cells,%i\n", rand() % 34 + 33);
-  fprintf(f, "recruit-neutrophils,%i\n", rand() % 34 + 33);
-  fprintf(f, "ProbOfSuccesOfInterac-NeutTum,%i\n", rand() % 34 + 33);
-  fprintf(f, "ProbOfChange-to-tan1-or-tan2,%i\n", rand() % 34);
-  fprintf(f, "ProbOfSuccesOf-tan1,%i\n", rand() % 34 + 33);
-  fprintf(f, "No-of-desactivating-tumor-cells-by-tan1,%i\n", rand() % 34 + 33);
-  fprintf(f, "ProbOfSuccesOf-tam1,%i\n", rand() % 34 + 33);
-  fprintf(f, "recruit-macrophages,%i\n", rand() % 34 + 33);
-  fprintf(f, "ProbOfSuccesOfInterac-MacrTum,%i\n", rand() % 34 + 33);
-  fprintf(f, "ProbOfChange-to-tam1-or-tam2,%i\n", rand() % 34);
-  fprintf(f, "recruit-natural-killers,%i\n", rand() % 34 + 33);
-  fprintf(f, "ProbOfSAttackSuccesByNk,%i\n", rand() % 34);
-  fprintf(f, "No-of-activating-tumor-cells-by-tan2,%i\n", rand() % 34);
-  fprintf(f, "No-of-activating-tumor-cells-by-tam2,%i\n", rand() % 34);
-  fprintf(f, "max-tumors,5000\n");
-  fprintf(f, "No.ticks,%d\n", NO_TICKS);
-  fprintf(f, "max-age-tam1,10\n");
-  fprintf(f, "max-age-tam2,10\n");
-  fprintf(f, "max-age-tan1,10\n");
-  fprintf(f, "max-age-tan2,10\n");
-  fprintf(f, "max-age-nk,10\n");
-  fprintf(f, "No.-of-initial-treg-cells,%i\n", rand() % 34 + 33);
-  fprintf(f, "No.-of-initial-helper-cells,%i\n", rand() % 34 + 33);
-  fprintf(f, "ProbOfSuccesOfInterac-Th-Tum,%i\n", rand() % 34 + 33);
-  fprintf(f, "ProbOfChange-thcells-to-thcells-,%i\n", rand() % 34 + 33);
-  fprintf(f, "ProbOfAttackSuccesByCd8,%i\n", rand() % 34);
-}
-
-void gen_medium_medium() {
-  fprintf(f, "No.-of-initial-tumor-cells,%i\n", rand() % 34 + 33);
-  fprintf(f, "No.-of-initial-neutrophils-cell,%i\n", rand() % 34 + 33);
-  fprintf(f, "No.-of-initial-macrophages-cells,%i\n", rand() % 34 + 33);
-  fprintf(f, "No.-of-initial-natural-killers-cells,%i\n", rand() % 34 + 33);
-  fprintf(f, "recruit-neutrophils,%i\n", rand() % 34 + 33);
-  fprintf(f, "ProbOfSuccesOfInterac-NeutTum,%i\n", rand() % 34 + 33);
-  fprintf(f, "ProbOfChange-to-tan1-or-tan2,%i\n", rand() % 34 + 33);
-  fprintf(f, "ProbOfSuccesOf-tan1,%i\n", rand() % 34 + 33);
-  fprintf(f, "No-of-desactivating-tumor-cells-by-tan1,%i\n", rand() % 34 + 33);
-  fprintf(f, "ProbOfSuccesOf-tam1,%i\n", rand() % 34 + 33);
-  fprintf(f, "recruit-macrophages,%i\n", rand() % 34 + 33);
-  fprintf(f, "ProbOfSuccesOfInterac-MacrTum,%i\n", rand() % 34 + 33);
-  fprintf(f, "ProbOfChange-to-tam1-or-tam2,%i\n", rand() % 34 + 33);
-  fprintf(f, "recruit-natural-killers,%i\n", rand() % 34 + 33);
-  fprintf(f, "ProbOfSAttackSuccesByNk,%i\n", rand() % 34 + 33);
-  fprintf(f, "No-of-activating-tumor-cells-by-tan2,%i\n", rand() % 34 + 33);
-  fprintf(f, "No-of-activating-tumor-cells-by-tam2,%i\n", rand() % 34 + 33);
-  fprintf(f, "max-tumors,5000\n");
-  fprintf(f, "No.ticks,%d\n", NO_TICKS);
-  fprintf(f, "max-age-tam1,10\n");
-  fprintf(f, "max-age-tam2,10\n");
-  fprintf(f, "max-age-tan1,10\n");
-  fprintf(f, "max-age-tan2,10\n");
-  fprintf(f, "max-age-nk,10\n");
-  fprintf(f, "No.-of-initial-treg-cells,%i\n", rand() % 34 + 33);
-  fprintf(f, "No.-of-initial-helper-cells,%i\n", rand() % 34 + 33);
-  fprintf(f, "ProbOfSuccesOfInterac-Th-Tum,%i\n", rand() % 34 + 33);
-  fprintf(f, "ProbOfChange-thcells-to-thcells-,%i\n", rand() % 34 + 33);
-  fprintf(f, "ProbOfAttackSuccesByCd8,%i\n", rand() % 34 + 33);
-}
-
-void gen_medium_strong() {
-  fprintf(f, "No.-of-initial-tumor-cells,%i\n", rand() % 35 + 66);
-  fprintf(f, "No.-of-initial-neutrophils-cell,%i\n", rand() % 34 + 33);
-  fprintf(f, "No.-of-initial-macrophages-cells,%i\n", rand() % 34 + 33);
-  fprintf(f, "No.-of-initial-natural-killers-cells,%i\n", rand() % 34 + 33);
-  fprintf(f, "recruit-neutrophils,%i\n", rand() % 34 + 33);
-  fprintf(f, "ProbOfSuccesOfInterac-NeutTum,%i\n", rand() % 34 + 33);
-  fprintf(f, "ProbOfChange-to-tan1-or-tan2,%i\n", rand() % 35 + 66);
-  fprintf(f, "ProbOfSuccesOf-tan1,%i\n", rand() % 34 + 33);
-  fprintf(f, "No-of-desactivating-tumor-cells-by-tan1,%i\n", rand() % 34 + 33);
-  fprintf(f, "ProbOfSuccesOf-tam1,%i\n", rand() % 34 + 33);
-  fprintf(f, "recruit-macrophages,%i\n", rand() % 34 + 33);
-  fprintf(f, "ProbOfSuccesOfInterac-MacrTum,%i\n", rand() % 34 + 33);
-  fprintf(f, "ProbOfChange-to-tam1-or-tam2,%i\n", rand() % 35 + 66);
-  fprintf(f, "recruit-natural-killers,%i\n", rand() % 34 + 33);
-  fprintf(f, "ProbOfSAttackSuccesByNk,%i\n", rand() % 35 + 66);
-  fprintf(f, "No-of-activating-tumor-cells-by-tan2,%i\n", rand() % 35 + 66);
-  fprintf(f, "No-of-activating-tumor-cells-by-tam2,%i\n", rand() % 35 + 66);
-  fprintf(f, "max-tumors,5000\n");
-  fprintf(f, "No.ticks,%d\n", NO_TICKS);
-  fprintf(f, "max-age-tam1,10\n");
-  fprintf(f, "max-age-tam2,10\n");
-  fprintf(f, "max-age-tan1,10\n");
-  fprintf(f, "max-age-tan2,10\n");
-  fprintf(f, "max-age-nk,10\n");
-  fprintf(f, "No.-of-initial-treg-cells,%i\n", rand() % 34 + 33);
-  fprintf(f, "No.-of-initial-helper-cells,%i\n", rand() % 34 + 33);
-  fprintf(f, "ProbOfSuccesOfInterac-Th-Tum,%i\n", rand() % 34 + 33);
-  fprintf(f, "ProbOfChange-thcells-to-thcells-,%i\n", rand() % 34 + 33);
-  fprintf(f, "ProbOfAttackSuccesByCd8,%i\n", rand() % 35 + 66);
-}
-
-void gen_strong_weak() {
-  fprintf(f, "No.-of-initial-tumor-cells,%i\n", rand() % 34);
-  fprintf(f, "No.-of-initial-neutrophils-cell,%i\n", rand() % 35 + 66);
-  fprintf(f, "No.-of-initial-macrophages-cells,%i\n", rand() % 35 + 66);
-  fprintf(f, "No.-of-initial-natural-killers-cells,%i\n", rand() % 35 + 66);
-  fprintf(f, "recruit-neutrophils,%i\n", rand() % 35 + 66);
-  fprintf(f, "ProbOfSuccesOfInterac-NeutTum,%i\n", rand() % 35 + 66);
-  fprintf(f, "ProbOfChange-to-tan1-or-tan2,%i\n", rand() % 34);
-  fprintf(f, "ProbOfSuccesOf-tan1,%i\n", rand() % 35 + 66);
-  fprintf(f, "No-of-desactivating-tumor-cells-by-tan1,%i\n", rand() % 35 + 66);
-  fprintf(f, "ProbOfSuccesOf-tam1,%i\n", rand() % 35 + 66);
-  fprintf(f, "recruit-macrophages,%i\n", rand() % 35 + 66);
-  fprintf(f, "ProbOfSuccesOfInterac-MacrTum,%i\n", rand() % 35 + 66);
-  fprintf(f, "ProbOfChange-to-tam1-or-tam2,%i\n", rand() % 34);
-  fprintf(f, "recruit-natural-killers,%i\n", rand() % 35 + 66);
-  fprintf(f, "ProbOfSAttackSuccesByNk,%i\n", rand() % 34);
-  fprintf(f, "No-of-activating-tumor-cells-by-tan2,%i\n", rand() % 34);
-  fprintf(f, "No-of-activating-tumor-cells-by-tam2,%i\n", rand() % 34);
-  fprintf(f, "max-tumors,5000\n");
-  fprintf(f, "No.ticks,%d\n", NO_TICKS);
-  fprintf(f, "max-age-tam1,10\n");
-  fprintf(f, "max-age-tam2,10\n");
-  fprintf(f, "max-age-tan1,10\n");
-  fprintf(f, "max-age-tan2,10\n");
-  fprintf(f, "max-age-nk,10\n");
-  fprintf(f, "No.-of-initial-treg-cells,%i\n", rand() % 35 + 66);
-  fprintf(f, "No.-of-initial-helper-cells,%i\n", rand() % 35 + 66);
-  fprintf(f, "ProbOfSuccesOfInterac-Th-Tum,%i\n", rand() % 35 + 66);
-  fprintf(f, "ProbOfChange-thcells-to-thcells-,%i\n", rand() % 35 + 66);
-  fprintf(f, "ProbOfAttackSuccesByCd8,%i\n", rand() % 34);
-}
-
-void gen_strong_medium() {
-  fprintf(f, "No.-of-initial-tumor-cells,%i\n", rand() % 34 + 33);
-  fprintf(f, "No.-of-initial-neutrophils-cell,%i\n", rand() % 35 + 66);
-  fprintf(f, "No.-of-initial-macrophages-cells,%i\n", rand() % 35 + 66);
-  fprintf(f, "No.-of-initial-natural-killers-cells,%i\n", rand() % 35 + 66);
-  fprintf(f, "recruit-neutrophils,%i\n", rand() % 35 + 66);
-  fprintf(f, "ProbOfSuccesOfInterac-NeutTum,%i\n", rand() % 35 + 66);
-  fprintf(f, "ProbOfChange-to-tan1-or-tan2,%i\n", rand() % 34 + 33);
-  fprintf(f, "ProbOfSuccesOf-tan1,%i\n", rand() % 35 + 66);
-  fprintf(f, "No-of-desactivating-tumor-cells-by-tan1,%i\n", rand() % 35 + 66);
-  fprintf(f, "ProbOfSuccesOf-tam1,%i\n", rand() % 35 + 66);
-  fprintf(f, "recruit-macrophages,%i\n", rand() % 35 + 66);
-  fprintf(f, "ProbOfSuccesOfInterac-MacrTum,%i\n", rand() % 35 + 66);
-  fprintf(f, "ProbOfChange-to-tam1-or-tam2,%i\n", rand() % 34 + 33);
-  fprintf(f, "recruit-natural-killers,%i\n", rand() % 35 + 66);
-  fprintf(f, "ProbOfSAttackSuccesByNk,%i\n", rand() % 34 + 33);
-  fprintf(f, "No-of-activating-tumor-cells-by-tan2,%i\n", rand() % 34 + 33);
-  fprintf(f, "No-of-activating-tumor-cells-by-tam2,%i\n", rand() % 34 + 33);
-  fprintf(f, "max-tumors,5000\n");
-  fprintf(f, "No.ticks,%d\n", NO_TICKS);
-  fprintf(f, "max-age-tam1,10\n");
-  fprintf(f, "max-age-tam2,10\n");
-  fprintf(f, "max-age-tan1,10\n");
-  fprintf(f, "max-age-tan2,10\n");
-  fprintf(f, "max-age-nk,10\n");
-  fprintf(f, "No.-of-initial-treg-cells,%i\n", rand() % 35 + 66);
-  fprintf(f, "No.-of-initial-helper-cells,%i\n", rand() % 35 + 66);
-  fprintf(f, "ProbOfSuccesOfInterac-Th-Tum,%i\n", rand() % 35 + 66);
-  fprintf(f, "ProbOfChange-thcells-to-thcells-,%i\n", rand() % 35 + 66);
-  fprintf(f, "ProbOfAttackSuccesByCd8,%i\n", rand() % 34 + 33);
-}
-
-void gen_strong_strong() {
-  fprintf(f, "No.-of-initial-tumor-cells,%i\n", rand() % 35 + 66);
-  fprintf(f, "No.-of-initial-neutrophils-cell,%i\n", rand() % 35 + 66);
-  fprintf(f, "No.-of-initial-macrophages-cells,%i\n", rand() % 35 + 66);
-  fprintf(f, "No.-of-initial-natural-killers-cells,%i\n", rand() % 35 + 66);
-  fprintf(f, "recruit-neutrophils,%i\n", rand() % 35 + 66);
-  fprintf(f, "ProbOfSuccesOfInterac-NeutTum,%i\n", rand() % 35 + 66);
-  fprintf(f, "ProbOfChange-to-tan1-or-tan2,%i\n", rand() % 35 + 66);
-  fprintf(f, "ProbOfSuccesOf-tan1,%i\n", rand() % 35 + 66);
-  fprintf(f, "No-of-desactivating-tumor-cells-by-tan1,%i\n", rand() % 35 + 66);
-  fprintf(f, "ProbOfSuccesOf-tam1,%i\n", rand() % 35 + 66);
-  fprintf(f, "recruit-macrophages,%i\n", rand() % 35 + 66);
-  fprintf(f, "ProbOfSuccesOfInterac-MacrTum,%i\n", rand() % 35 + 66);
-  fprintf(f, "ProbOfChange-to-tam1-or-tam2,%i\n", rand() % 35 + 66);
-  fprintf(f, "recruit-natural-killers,%i\n", rand() % 35 + 66);
-  fprintf(f, "ProbOfSAttackSuccesByNk,%i\n", rand() % 35 + 66);
-  fprintf(f, "No-of-activating-tumor-cells-by-tan2,%i\n", rand() % 35 + 66);
-  fprintf(f, "No-of-activating-tumor-cells-by-tam2,%i\n", rand() % 35 + 66);
-  fprintf(f, "max-tumors,5000\n");
-  fprintf(f, "No.ticks,%d\n", NO_TICKS);
-  fprintf(f, "max-age-tam1,10\n");
-  fprintf(f, "max-age-tam2,10\n");
-  fprintf(f, "max-age-tan1,10\n");
-  fprintf(f, "max-age-tan2,10\n");
-  fprintf(f, "max-age-nk,10\n");
-  fprintf(f, "No.-of-initial-treg-cells,%i\n", rand() % 35 + 66);
-  fprintf(f, "No.-of-initial-helper-cells,%i\n", rand() % 35 + 66);
-  fprintf(f, "ProbOfSuccesOfInterac-Th-Tum,%i\n", rand() % 35 + 66);
-  fprintf(f, "ProbOfChange-thcells-to-thcells-,%i\n", rand() % 35 + 66);
-  fprintf(f, "ProbOfAttackSuccesByCd8,%i\n", rand() % 35 + 66);
+  fprintf(f, "No.-of-initial-treg-cells,%i\n", rand() % 34 + is_level);
+  fprintf(f, "No.-of-initial-helper-cells,%i\n", rand() % 34 + is_level);
+  fprintf(f, "ProbOfSuccesOfInterac-Th-Tum,%i\n", rand() % 34 + is_level);
+  fprintf(f, "ProbOfChange-thcells-to-thcells-,%i\n", rand() % 34 + is_level);
+  fprintf(f, "ProbOfAttackSuccesByCd8,%i\n", rand() % 34 + is_level);
 }
 
 void gen_data_by_combination(level_t si_level, level_t cancer_level) {
@@ -314,27 +58,7 @@ void gen_data_by_combination(level_t si_level, level_t cancer_level) {
       fprintf(stderr, "Error en la creacioin del archivo %s.\n", filename);
       break;
     } else {
-      if (si_level == WEAK && cancer_level == WEAK) {
-        gen_weak_weak();
-      } else if (si_level == WEAK && cancer_level == MEDIUM) {
-        gen_weak_medium();
-      } else if (si_level == WEAK && cancer_level == STRONG) {
-        gen_weak_strong();
-      } else if (si_level == MEDIUM && cancer_level == WEAK) {
-        gen_medium_weak();
-      } else if (si_level == MEDIUM && cancer_level == MEDIUM) {
-        gen_medium_medium();
-      } else if (si_level == MEDIUM && cancer_level == STRONG) {
-        gen_medium_strong();
-      } else if (si_level == STRONG && cancer_level == WEAK) {
-        gen_strong_weak();
-      } else if (si_level == STRONG && cancer_level == MEDIUM) {
-        gen_strong_medium();
-      } else if (si_level == STRONG && cancer_level == STRONG) {
-        gen_strong_strong();
-      } else {
-        fprintf(stderr, "Error: Combinacion desconocida.\n");
-      }
+      gen(si_level * 33, cancer_level * 33);
     }
     fclose(f);
   }
