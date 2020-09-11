@@ -115,8 +115,35 @@ globals [
   are_there_metastasis_bone
   are_there_metastasis_lung
   are_there_metastasis_liver
+  tick-init-metastasis-bone
+  tick-init-metastasis-lung
+  tick-init-metastasis-liver
 ] ; some counts
 
+to-report gauss [a x]
+  let b No.ticks * 2.0 / 5.0
+  let c 2.7
+
+  let result int( a * (e ^ ( - ((x - b) ^ 2.0) / (2.0 * c ^ 2.0 ) )))
+
+  ;if result < (a / 10.0) [
+  ;  set result int(a / 10.0)
+  ;]
+
+  report result
+end
+
+to-report neutrophils-to-recruit [x]
+  report gauss recruit-neutrophils x
+end
+
+to-report macrophages-to-recruit [x]
+  report gauss recruit-macrophages x
+end
+
+to-report natural-killers-to-recruit [x]
+  report gauss recruit-natural-killers x
+end
 
 ;------------------------------------- cells definitions
 to tumors-cells         ; tumor cells
@@ -127,7 +154,6 @@ to tumors-cells         ; tumor cells
     [
       set hidden? true
     ]
-
 end
 
 
@@ -192,9 +218,9 @@ end
 ;------------------------------------- setup
 to setup
   ; Lecture of variable input files. Files eg. {"input_values1.csv", "input_values2.csv", ... , "input_valuesN.csv"} -> "input-values"
-  set filename-template "data/medio-fuerte/input_values"
-  set total-files 1
-  set file-num random 150
+  set filename-template "data/fuerte-fuerte/input_values"
+  set total-files 10
+  set file-num 5
 
   init
 end
@@ -261,6 +287,9 @@ to clear-vars
   set are_there_metastasis_bone false
   set are_there_metastasis_lung false
   set are_there_metastasis_liver false
+  set tick-init-metastasis-bone -1
+  set tick-init-metastasis-lung -1
+  set tick-init-metastasis-liver -1
 end
 
 to init
@@ -328,6 +357,7 @@ to setup_metastasis_bone
     set are_there_metastasis_bone are_there_metastasis_site "bone"
 
     if are_there_metastasis_bone = true [
+      set tick-init-metastasis-bone ticks
       setupbone 1 1
     ]
   ]
@@ -339,6 +369,7 @@ to setup_metastasis_lung
     set are_there_metastasis_lung are_there_metastasis_site "lung"
 
     if are_there_metastasis_lung = true [
+      set tick-init-metastasis-lung ticks
       setuplung -1 -1
     ]
   ]
@@ -350,6 +381,7 @@ to setup_metastasis_liver
     set are_there_metastasis_liver are_there_metastasis_site "liver"
 
     if are_there_metastasis_liver = true [
+      set tick-init-metastasis-liver ticks
       setupliver 1 -1
     ]
   ]
@@ -577,12 +609,12 @@ to go
   ;]
 
 
-   ; Cell actions
-  ;ask tumors [
-  ;  mitosis-tumors tumors
-  ;  set age age + 0.5
-  ;  set color blue - 0.25 * age
-  ;]
+  ; Cell actions
+  mitosis-tumors tumors
+  ask tumors [
+    set age age + 0.5
+    set color blue - 0.25 * age
+  ]
 
   ask neutrs
   [
@@ -603,10 +635,15 @@ to go
   ]
 
   ask natuks [
-   ;move-natuk natuks -16 0
-   move-natuk natuks -16 16
-   set age age + 1
-   death max-age-nk
+    move-natuk natuks -16 16
+
+    let tumh one-of tumors-here
+    if random 100 < ProbOfSAttackSuccesByNk [
+      attack tumh 0
+    ]
+
+    death max-age-nk
+    set age age + 1
   ]
 
   ask Th-cells [
@@ -617,17 +654,14 @@ to go
 
   ; recruit of innate immune system cells
   let x cordinates -1 1
-  ;create-neutrs recruit-neutrophils [ neutrs-cells setxy random-xcor max-pycor set age 0 ]
-  create-neutrs recruit-neutrophils [ neutrs-cells setxy x 32 set age 0 ]
+  create-neutrs neutrophils-to-recruit ticks [ neutrs-cells setxy x 32 set age 0 ]
 
   ;let y random-ycor
   let y cordinates 1 -1
-  ;create-natuks recruit-natural-killers [ natuks-cells setxy min-pxcor random-ycor set age 0 ]
-  create-natuks recruit-natural-killers [ natuks-cells setxy 0 y set age 0 ]
+  create-natuks natural-killers-to-recruit ticks [ natuks-cells setxy 0 y set age 0 ]
 
   set x cordinates -1 1
-  ;create-macros recruit-macrophages [ macros-cells setxy random-xcor min-pycor set age 0 ]
-  create-macros recruit-macrophages [ macros-cells setxy x 0 set age 0 ]
+  create-macros macrophages-to-recruit ticks [ macros-cells setxy x 0 set age 0 ]
 
   hamilton-1
 
@@ -680,7 +714,7 @@ end
 to mitosis-tumors [tumorstype]
   if (not stop-replication?) [
     ask tumorstype [
-      if (age > 1) and (age < 3) [
+      if (age >= 1) and (age < 5) [
         set age age + 1
         hatch 1 [
           rt random-float 360
@@ -834,10 +868,6 @@ to move-natuk[natukstype x y]
     facexy x y ;one-of tumors
     fd 0.5
     set age age + 0.5
-    let tumh one-of tumors-here
-    if random 100 < ProbOfSAttackSuccesByNk [
-    attack tumh 0
-    ]
   ]
 end
 
@@ -1212,8 +1242,8 @@ end
 ;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 to metastasisBone
   ; Cell actions
+  mitosis-tumors tumorsb
   ask tumorsb [
-    mitosis-tumors tumorsb
     set age age + 0.5
     set color blue - 0.25 * age
   ]
@@ -1242,19 +1272,15 @@ to metastasisBone
   ]
 
 ; recruit of innate immune system cells
-   let x cordinates 1 1
-  ;create-neutrs recruit-neutrophils [ neutrs-cells setxy random-xcor max-pycor set age 0 ]
-  create-neutrsb recruit-neutrophils [ neutrs-cells setxy x 32 set age 0 ]
-
+  let x cordinates 1 1
+  create-neutrsb neutrophils-to-recruit (ticks - tick-init-metastasis-bone) [ neutrs-cells setxy x 32 set age 0 ]
 
   ;let y random-ycor
   let y cordinates 1 -1
-  ;create-natuks recruit-natural-killers [ natuks-cells setxy min-pxcor random-ycor set age 0 ]
-  create-natuks recruit-natural-killers [ natuks-cells setxy 0 y set age 0 ]
+  create-natuks natural-killers-to-recruit (ticks - tick-init-metastasis-bone) [ natuks-cells setxy 0 y set age 0 ]
 
   set x cordinates 1 1
-  ;create-macros recruit-macrophages [ macros-cells setxy random-xcor min-pycor set age 0 ]
-  create-macros recruit-macrophages [ macros-cells setxy x 0 set age 0 ]
+  create-macros macrophages-to-recruit (ticks - tick-init-metastasis-bone) [ macros-cells setxy x 0 set age 0 ]
 
 end
 
@@ -1467,8 +1493,8 @@ end
 ;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 to metastasisLung
   ; Cell actions
+  mitosis-tumors tumorsLg
   ask tumorsLg [
-    mitosis-tumors tumorsLg
     set age age + 0.5
     set color blue - 0.25 * age
   ]
@@ -1496,18 +1522,14 @@ to metastasisLung
   ]
 
 ; recruit of innate immune system cells
-   let x cordinates -1 1
-  ;create-neutrs recruit-neutrophils [ neutrs-cells setxy random-xcor max-pycor set age 0 ]
-  create-neutrsLg recruit-neutrophils [ neutrs-cells setxy x -32 set age 0 ]
+  let x cordinates -1 1
+  create-neutrsLg neutrophils-to-recruit (ticks - tick-init-metastasis-lung) [ neutrs-cells setxy x -32 set age 0 ]
 
-
-    let y cordinates -1 -1
-  ;create-natuks recruit-natural-killers [ natuks-cells setxy min-pxcor random-ycor set age 0 ]
-  create-natuksLg recruit-natural-killers [ natuks-cells setxy 0 y set age 0 ]
+  let y cordinates -1 -1
+  create-natuksLg natural-killers-to-recruit (ticks - tick-init-metastasis-lung) [ natuks-cells setxy 0 y set age 0 ]
 
   set x cordinates -1 1
-  ;create-macros recruit-macrophages [ macros-cells setxy random-xcor min-pycor set age 0 ]
-  create-macrosLg recruit-macrophages [ macros-cells setxy x 0 set age 0 ]
+  create-macrosLg macrophages-to-recruit (ticks - tick-init-metastasis-lung) [ macros-cells setxy x 0 set age 0 ]
 
 end
 
@@ -1700,8 +1722,8 @@ end
 ;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 to metastasisLiver
   ; Cell actions
+  mitosis-tumors tumorsLv
   ask tumorsLv [
-    mitosis-tumors tumorsLv
     set age age + 0.5
     set color blue - 0.25 * age
   ]
@@ -1730,17 +1752,14 @@ to metastasisLiver
 
 ; recruit of innate immune system cells
    let x cordinates 1 1
-  ;create-neutrs recruit-neutrophils [ neutrs-cells setxy random-xcor max-pycor set age 0 ]
-  create-neutrsLv recruit-neutrophils [ neutrs-cells setxy x -32 set age 0 ]
+  create-neutrsLv neutrophils-to-recruit (ticks - tick-init-metastasis-liver) [ neutrs-cells setxy x -32 set age 0 ]
 
 
     let y cordinates -1 -1
-  ;create-natuks recruit-natural-killers [ natuks-cells setxy min-pxcor random-ycor set age 0 ]
-  create-natuksLv recruit-natural-killers [ natuks-cells setxy 0 y set age 0 ]
+  create-natuksLv natural-killers-to-recruit (ticks - tick-init-metastasis-liver) [ natuks-cells setxy 0 y set age 0 ]
 
   set x cordinates 1 1
-  ;create-macros recruit-macrophages [ macros-cells setxy random-xcor min-pycor set age 0 ]
-  create-macrosLv recruit-macrophages [ macros-cells setxy x 0 set age 0 ]
+  create-macrosLv macrophages-to-recruit (ticks - tick-init-metastasis-liver) [ macros-cells setxy x 0 set age 0 ]
 
 end
 to setupliver[a b]
@@ -2318,6 +2337,39 @@ MONITOR
 411
 No. Tr cells
 count Tr-cells
+17
+1
+11
+
+MONITOR
+10
+472
+190
+517
+Tick metastasis bone started
+ifelse-value tick-init-metastasis-bone >= 0 [\n  tick-init-metastasis-bone\n][\n  \"N/A\"\n]
+17
+1
+11
+
+MONITOR
+10
+527
+191
+572
+Tick metastasis lung started
+ifelse-value tick-init-metastasis-lung >= 0 [\n  tick-init-metastasis-lung\n][\n  \"N/A\"\n]
+17
+1
+11
+
+MONITOR
+10
+584
+191
+629
+Tick metastasis liver started
+ifelse-value tick-init-metastasis-liver >= 0 [\n  tick-init-metastasis-liver\n][\n  \"N/A\"\n]
 17
 1
 11

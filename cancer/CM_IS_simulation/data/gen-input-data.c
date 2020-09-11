@@ -6,7 +6,7 @@
 #include <time.h>
 
 #define TOTAL_FILES 150
-#define NO_TICKS 11
+#define NO_TICKS 20
 
 char* levels[3] = {"debil", "medio", "fuerte"};
 typedef enum { WEAK, MEDIUM, STRONG } level_t;
@@ -14,9 +14,9 @@ FILE* f;
 
 void gen(int is_level, int cancer_level) {
   fprintf(f, "No.-of-initial-tumor-cells,%i\n", rand() % 34 + cancer_level);
-  fprintf(f, "No.-of-initial-neutrophils-cell,%i\n", rand() % 34 + is_level);
-  fprintf(f, "No.-of-initial-macrophages-cells,%i\n", rand() % 34 + is_level);
-  fprintf(f, "No.-of-initial-natural-killers-cells,%i\n", rand() % 34 + is_level);
+  fprintf(f, "No.-of-initial-neutrophils-cell,%i\n", (int) ((rand() % 34 + is_level) * 0.33));
+  fprintf(f, "No.-of-initial-macrophages-cells,%i\n", (int) ((rand() % 34 + is_level) * 0.33));
+  fprintf(f, "No.-of-initial-natural-killers-cells,%i\n", (int) ((rand() % 34 + is_level) * 0.33));
   fprintf(f, "recruit-neutrophils,%i\n", rand() % 34 + is_level);
   fprintf(f, "ProbOfSuccesOfInterac-NeutTum,%i\n", rand() % 34 + is_level);
   fprintf(f, "ProbOfChange-to-tan1-or-tan2,%i\n", rand() % 34 + is_level);
@@ -25,7 +25,7 @@ void gen(int is_level, int cancer_level) {
   fprintf(f, "ProbOfSuccesOf-tam1,%i\n", rand() % 34 + is_level);
   fprintf(f, "recruit-macrophages,%i\n", rand() % 34 + is_level);
   fprintf(f, "ProbOfSuccesOfInterac-MacrTum,%i\n", rand() % 34 + is_level);
-  fprintf(f, "ProbOfChange-to-tam1-or-tam2,%i\n", rand() % 34 + is_level);
+  fprintf(f, "ProbOfChange-to-tam1-or-tam2,%i\n", rand() % 34 + cancer_level);
   fprintf(f, "recruit-natural-killers,%i\n", rand() % 34 + is_level);
   fprintf(f, "ProbOfSAttackSuccesByNk,%i\n", rand() % 34 + is_level);
   fprintf(f, "No-of-activating-tumor-cells-by-tan2,%i\n", rand() % 34 + cancer_level);
