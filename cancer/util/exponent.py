@@ -101,35 +101,15 @@ def show_graph(X, x_min, x_max, alpha):
     return X
 
 
-# x_min = 1
-# # X = gen_test_samples(x_min, 15.)
-# X = gen_samples_breast_metastasis()
-# # print('X:', X)
+x_min = 1
+# X = gen_test_samples(x_min, 15.)
+X = gen_samples_breast_metastasis()
+# print('X:', X)
 
-# alpha = calc_exponent(X, x_min, 5)
-# print('alpha:', alpha)
+alpha = calc_exponent(X, x_min, 5)
+print('alpha:', alpha)
 
-# show_graph(X, 1, 5, 0.000003)
+show_graph(X, 1, 5, 0.000003)
 
-# stats.probplot(X, dist=stats.pareto, sparams=(alpha, x_min), plot=plt)
-# plt.show()
-
-max = 10
-
-def gauss(x):
-    a = 100
-    b = max * (2./5.)
-    c = 2.7 #2
-
-    result = a * math.e ** (-(x-b)**2 / (2*c**2))
-
-    return result
-
-# print(gauss(0))
-
-x = np.linspace(0, max, 1000)
-
-plt.plot(x, gauss(x), linewidth=2, color='r')
-plt.grid(b=True, color='grey', alpha=0.3, linestyle='-.', linewidth=2)
-# plt.axis('equal')
+stats.probplot(X, dist=stats.pareto, sparams=(alpha, x_min), plot=plt)
 plt.show()
