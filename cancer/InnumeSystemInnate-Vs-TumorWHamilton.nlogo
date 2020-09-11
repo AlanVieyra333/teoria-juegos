@@ -47,6 +47,17 @@ turtles-own [ age ] ; cell age
 
 globals [ tan1 tan2 tam1 tam2 treg helpp helpn T-Cn T-Cp Hamilton HamiltonTu HamiltonIS i j aij prod edad l prob] ; some counts
 
+to-report tumors-to-recruit [t]
+  let a 0.24 * 20.0 / No.Ticks    ; tasa de crecimiento (cada mes)
+  let b 0.047 * 20.0 / No.Ticks   ; Coef de densidad
+  let k a / b
+
+  let prev_result No.-of-initial-tumor-cells * (k / (1.0 + (k - 1.0) * (e ^ (- a * (t - 1)))))
+  let result No.-of-initial-tumor-cells * (k / (1.0 + (k - 1.0) * (e ^ (- a * t))))
+
+  report int(result - prev_result)
+end
+
 to-report gauss [a]
   let x ticks
   let b No.ticks * 2.0 / 5.0
@@ -218,19 +229,11 @@ to go
   [
     output_files
     user-message "Demasiado grande el tumor" stop ]
- ;too small the tumor
- ;if count tumors < min-tumors
-  ;[
-   ; output_files
-    ;user-message "Tumor casi imperceptible" stop ]
+
 
 
    ; Cell actions
-  ask tumors [
-    mitosis-tumors tumors
-    set age age + 0.5
-    set color blue - 0.25 * age
-  ]
+  mitosis-tumors tumors
 
   ask neutrs [
     move-neutr
@@ -261,6 +264,7 @@ to go
     death max-age-nk
     set age age + 1
   ]
+
 
 ; recruit of innate immune system cells
    let x cordinates -1 1
@@ -306,15 +310,23 @@ end
 to mitosis-tumors [tumorstype]
   if (not stop-replication?) [
     ask tumorstype [
-      if (age > 1) and (age < 3) [
-        set age age + 1
-        hatch 1 [
-          rt random-float 360
-          fd 0.5
-          set age 0
-        ]
-      ]
+      set age age + 1
+      set color blue - 0.25 * age
     ]
+
+    (ifelse is-tumor? one-of tumorstype [
+        create-tumors tumors-to-recruit ticks [ rt random-float 360 fd 0.5 set age 0]
+      ]
+      is-tumorb? one-of tumorstype [
+        create-tumorsb tumors-to-recruit ticks [ rt random-float 360 fd 0.5 set age 0]
+      ]
+      is-tumorbLg? one-of tumorstype [
+        create-tumorsLg tumors-to-recruit ticks [ rt random-float 360 fd 0.5 set age 0]
+      ]
+      is-tumorbLv? one-of tumorstype [
+        create-tumorsLv tumors-to-recruit ticks [ rt random-float 360 fd 0.5 set age 0]
+      ]
+    )
   ]
 end
 
@@ -714,11 +726,7 @@ to metastasisBone
   if ticks = 10 [setupbone 1 1]
 
    ; Cell actions
-  ask tumorsb [
-    mitosis-tumors tumorsb
-    set age age + 0.5
-    set color blue - 0.25 * age
-  ]
+  mitosis-tumors tumorsb
 
   ask neutrsb [
     move-neutrb
@@ -949,11 +957,7 @@ to metastasisLung
   if ticks = 16 [setuplung -1 -1]
 
    ; Cell actions
-  ask tumorsLg [
-    mitosis-tumors tumorsLg
-    set age age + 0.5
-    set color blue - 0.25 * age
-  ]
+  mitosis-tumors tumorsLg
 
   ask neutrsLg [
     move-neutrLg
@@ -1191,11 +1195,7 @@ to metastasisLiver
   if ticks = 18 [setupliver 1 -1]
 
    ; Cell actions
-  ask tumorsLv [
-    mitosis-tumors tumorsLv
-    set age age + 0.5
-    set color blue - 0.25 * age
-  ]
+  mitosis-tumors tumorsLv
 
   ask neutrsLv [
     move-neutrLv
@@ -2047,7 +2047,7 @@ No.ticks
 No.ticks
 10
 1000
-15.0
+20.0
 1
 1
 NIL
