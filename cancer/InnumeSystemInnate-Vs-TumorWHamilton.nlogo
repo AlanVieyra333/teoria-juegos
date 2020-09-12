@@ -47,15 +47,20 @@ turtles-own [ age ] ; cell age
 
 globals [ tan1 tan2 tam1 tam2 treg helpp helpn T-Cn T-Cp Hamilton HamiltonTu HamiltonIS i j aij prod edad l prob] ; some counts
 
-to-report tumors-to-recruit [t]
-  let a 0.24 * 20.0 / No.Ticks    ; tasa de crecimiento (cada mes)
-  let b 0.047 * 20.0 / No.Ticks   ; Coef de densidad
+to-report logistic-exp [t]
+  let a 0.35 * 20.0 / No.Ticks    ; tasa de crecimiento (cada mes)
+  let b 0.175 * 20.0 / No.Ticks   ; Coef de densidad
   let k a / b
 
-  let prev_result No.-of-initial-tumor-cells * (k / (1.0 + (k - 1.0) * (e ^ (- a * (t - 1)))))
-  let result No.-of-initial-tumor-cells * (k / (1.0 + (k - 1.0) * (e ^ (- a * t))))
+  let result k / (1.0 + (k - 1.0) * (e ^ (- a * t)))
 
-  report int(result - prev_result)
+  report result / 20.0
+end
+
+to-report tumors-to-recruit [t]
+  let result No.-of-initial-tumor-cells * logistic-exp t
+
+  report int(result)
 end
 
 to-report gauss [a]
@@ -283,7 +288,7 @@ to go
  hamilton-model-1
 
   ;METASTASIS
-  if ticks >= 10 [metastasisBone]
+  ;if ticks >= 10 [metastasisBone]
  if ticks >= 16 [metastasisLung]
   if ticks >= 18 [metastasisLiver]
   tick

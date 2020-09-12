@@ -120,11 +120,26 @@ globals [
   tick-init-metastasis-liver
 ] ; some counts
 
+to-report logistic-exp [t]
+  let a 0.35 * 20.0 / No.Ticks    ; tasa de crecimiento (cada mes)
+  let b 0.175 * 20.0 / No.Ticks   ; Coef de densidad
+  let k a / b
+
+  let result k / (1.0 + (k - 1.0) * (e ^ (- a * t)))
+
+  report result / 20.0
+end
+
+to-report tumors-to-recruit [t]
+;  report int(gauss 100 t)
+  report int( No.-of-initial-tumor-cells * logistic-exp t)
+end
+
 to-report gauss [a x]
   let b No.ticks * 2.0 / 5.0
   let c 2.7
 
-  let result int( a * (e ^ ( - ((x - b) ^ 2.0) / (2.0 * c ^ 2.0 ) )))
+  let result a * (e ^ ( - ((x - b) ^ 2.0) / (2.0 * c ^ 2.0 ) ))
 
   ;if result < (a / 10.0) [
   ;  set result int(a / 10.0)
@@ -134,15 +149,18 @@ to-report gauss [a x]
 end
 
 to-report neutrophils-to-recruit [x]
-  report gauss recruit-neutrophils x
+;  report int(gauss recruit-neutrophils x)
+  report int(No.-of-initial-neutrophils-cell * (logistic-exp x))
 end
 
 to-report macrophages-to-recruit [x]
-  report gauss recruit-macrophages x
+;  report int(gauss recruit-macrophages x)
+  report int(No.-of-initial-macrophages-cells * (logistic-exp x))
 end
 
 to-report natural-killers-to-recruit [x]
-  report gauss recruit-natural-killers x
+;  report int(gauss recruit-natural-killers x)
+  report int(No.-of-initial-natural-killers-cells * 5 * (logistic-exp x))
 end
 
 ;------------------------------------- cells definitions
@@ -218,9 +236,9 @@ end
 ;------------------------------------- setup
 to setup
   ; Lecture of variable input files. Files eg. {"input_values1.csv", "input_values2.csv", ... , "input_valuesN.csv"} -> "input-values"
-  set filename-template "data/fuerte-fuerte/input_values"
+  set filename-template "data/fuerte-medio/input_values"
   set total-files 10
-  set file-num 5
+  set file-num 1
 
   init
 end
@@ -601,23 +619,42 @@ to go
       stop
     ]
   ]
-  ;too small the tumor
-  ;if count tumors < min-tumors
-  ;[
-  ;  output_files
-  ;  user-message "Tumor casi imperceptible" stop
-  ;]
-
 
   ; Cell actions
   mitosis-tumors tumors
-  ask tumors [
-    set age age + 0.5
-    set color blue - 0.25 * age
+;
+;  ask neutrs
+;  [
+;    move-neutr
+;    neutr-tumor-interc
+;;    set age age + 1
+;    if (tan1?) and (not tan2?) and (not neut?) [ death max-age-tan1 + 3 ]
+;    if (tan2?) and (not tan1?) and (not neut?) [ death max-age-tan2 + 2 ]
+;  ]
+;;
+;  ask macros
+;  [
+;   move-macro
+;   macro-tumor-interc
+;;   set age age + 1
+;   if (tam1?) and (not tam2?) and (not macr?) [ death max-age-tam1 + 3 ]
+;   if (tam2?) and (not tam1?) and (not macr?) [ death max-age-tam2 + 2 ]
+;  ]
+;
+;  move-natuk natuks -16 16
+;
+  ask natuks [
+   move-natuk natuks -16 -16
+   set age age + 1
+   death max-age-nk
   ]
 
-  ask neutrs
-  [
+  ask Th-cells [
+   ;move-help Th-cells -16 0
+   move-help Th-cells -16 16
+   set age age + 1
+  ]
+  ask neutrs [
     move-neutr
     neutr-tumor-interc
     set age age + 1
@@ -625,31 +662,12 @@ to go
     if (tan2?) and (not tan1?) and (not neut?) [ death max-age-tan2 + 2 ]
   ]
 
-  ask macros
-  [
+  ask macrosLg [
    move-macro
    macro-tumor-interc
    set age age + 1
    if (tam1?) and (not tam2?) and (not macr?) [ death max-age-tam1 + 3 ]
    if (tam2?) and (not tam1?) and (not macr?) [ death max-age-tam2 + 2 ]
-  ]
-
-  ask natuks [
-    move-natuk natuks -16 16
-
-    let tumh one-of tumors-here
-    if random 100 < ProbOfSAttackSuccesByNk [
-      attack tumh 0
-    ]
-
-    death max-age-nk
-    set age age + 1
-  ]
-
-  ask Th-cells [
-   ;move-help Th-cells -16 0
-   move-help Th-cells -16 16
-   set age age + 1
   ]
 
   ; recruit of innate immune system cells
@@ -714,15 +732,23 @@ end
 to mitosis-tumors [tumorstype]
   if (not stop-replication?) [
     ask tumorstype [
-      if (age >= 1) and (age < 5) [
-        set age age + 1
-        hatch 1 [
-          rt random-float 360
-          fd 0.5
-          set age 0
-        ]
-      ]
+      set age age + 1
+      set color blue - 0.25 * age
     ]
+
+    (ifelse is-tumor? one-of tumorstype [
+        create-tumors tumors-to-recruit ticks [ rt random-float 360 fd 0.5 set age 0]
+      ]
+      is-tumorb? one-of tumorstype [
+        create-tumorsb tumors-to-recruit ticks [ rt random-float 360 fd 0.5 set age 0]
+      ]
+      is-tumorbLg? one-of tumorstype [
+        create-tumorsLg tumors-to-recruit ticks [ rt random-float 360 fd 0.5 set age 0]
+      ]
+      is-tumorbLv? one-of tumorstype [
+        create-tumorsLv tumors-to-recruit ticks [ rt random-float 360 fd 0.5 set age 0]
+      ]
+    )
   ]
 end
 
@@ -797,7 +823,7 @@ to move-neutr
     if tumh != nobody [
       if random 100 < ProbOfSuccesOfInterac-NeutTum [
 
-        ask neutrs-here [
+;        ask neutrs-here [
           ;show ( word "neutrs="count neutrs-here)
 
           if (neut?) and (not tan2?) and (not tan1?) [
@@ -819,7 +845,7 @@ to move-neutr
           ]
          rt random 360
          fd 0.3
-        ]
+;        ]
     ]
     ]
   ]
@@ -865,9 +891,19 @@ end
 ;------------------------------------- natural killers movement
 to move-natuk[natukstype x y]
   ask natukstype [
+    ; Move
     facexy x y ;one-of tumors
     fd 0.5
-    set age age + 0.5
+;    set age age + 0.5
+
+    ; Attack
+    let tumh one-of tumors-here
+    if random 100 < ProbOfSAttackSuccesByNk [
+      attack tumh 0
+    ]
+
+;    death max-age-nk
+;    set age age + 1
   ]
 end
 
@@ -1243,10 +1279,6 @@ end
 to metastasisBone
   ; Cell actions
   mitosis-tumors tumorsb
-  ask tumorsb [
-    set age age + 0.5
-    set color blue - 0.25 * age
-  ]
 
   ask neutrsb [
     move-neutrb
@@ -1494,10 +1526,6 @@ end
 to metastasisLung
   ; Cell actions
   mitosis-tumors tumorsLg
-  ask tumorsLg [
-    set age age + 0.5
-    set color blue - 0.25 * age
-  ]
 
   ask neutrsLg [
     move-neutrLg
@@ -1723,10 +1751,6 @@ end
 to metastasisLiver
   ; Cell actions
   mitosis-tumors tumorsLv
-  ask tumorsLv [
-    set age age + 0.5
-    set color blue - 0.25 * age
-  ]
 
   ask neutrsLv [
     move-neutrLv
@@ -1762,6 +1786,7 @@ to metastasisLiver
   create-macrosLv macrophages-to-recruit (ticks - tick-init-metastasis-liver) [ macros-cells setxy x 0 set age 0 ]
 
 end
+
 to setupliver[a b]
   let cordx  16 * a
   let cordy  16 * b
