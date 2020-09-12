@@ -6,13 +6,16 @@ import scipy.stats as stats
 max = 20
 
 def exp_logistic(t):
-    a = 0.24 * 20 / max    # tasa de crecimiento (cada mes)
-    b = 0.047 * 20 / max   # Coef de densidad
-    k = a / b
+    # a = 0.35 * 20 / max    # tasa de crecimiento (cada mes)
+    # b = 0.150 * 20 / max   # Coef de densidad
+    a = 0.35 * 20 / max
+    k = 20
+    # b = 0.03
+    # k = a / b
 
     result = k / (1. + (k - 1) * math.e ** (-a * t))
 
-    return result
+    return result / 20
 
 # print(gauss(0))
 
