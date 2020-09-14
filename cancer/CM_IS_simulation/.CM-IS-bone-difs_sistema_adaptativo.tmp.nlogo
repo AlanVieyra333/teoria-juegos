@@ -118,7 +118,28 @@ globals [
   tick-init-metastasis-bone
   tick-init-metastasis-lung
   tick-init-metastasis-liver
+  max-tumor-growth
 ] ; some counts
+
+to-report logistic [x]
+  let k 9.0
+  let x0 0.4
+  let a max-tumor-growth - 1.0
+
+  report 1.0 + ( a / (1.0 + (e ^ (- k * (x - x0)))) )
+end
+
+to-report gauss_aux(x):
+    let y_log logistic(x)
+
+
+    y_gauss = np.append(y_gauss, [1])
+
+    for i in range(len(y_log) - 1):
+        y_gauss = np.append(y_gauss, [ y_log[i + 1] / y_log[i] ])
+
+    report y_gauss
+end
 
 to-report logistic-exp [x]
   let a 9    ; Tasa de crecimiento
@@ -321,6 +342,7 @@ to clear-vars
   set tick-init-metastasis-bone -1
   set tick-init-metastasis-lung -1
   set tick-init-metastasis-liver -1
+  set max-tumor-growth 2
 end
 
 to init
