@@ -123,34 +123,31 @@ globals [
 
 to-report logistic [x]
   let a increase-tumor - 1.0
-  let k 9  ;Tasa de crecimiento
-  let x0 0.4
+  let k 9                     ; Tasa de crecimiento
+  let x0 0.4                  ; Punto de inflexion
 
   report 1.0 + ( a / (1.0 + (e ^ (- k * (x - x0)))) )
 end
 
-to-report logistic_proportion [x]
+to-report logistic_proportion [ticks-spread]
   set i 0
-  ;let v_result vector:value []
+  let d_x 1.0 / (ticks-spread - 1.0)
+  let v_result n-values ticks-spread [0]
 
-  repeat (No.ticks - 1) [
+  replace-item 0 v_result 1
 
-
-
+  repeat (ticks-spread - 1) [
+    replace-item i v_result ( logistic((i + 1) * d_x) / logistic((i) * d_x))
     set i i + 1
   ]
-;  y_log = logistic(x)
-;  y_gauss = np.array([])
-;
-;  y_gauss = np.append(y_gauss, [1])
-;
-;  for i in range(len(y_log) - 1):
-;      y_gauss = np.append(y_gauss, [ y_log[i + 1] / y_log[i] ])
-;
-;  report y_gauss
+
+  report v_result
 end
 
 to-report gauss_aproximation [x]
+  let ticks-cancer-spread No.Ticks
+
+  let a max logistic_proportion ticks-cancer-spread
 ;  a = max(gauss_aux(x)) - 1   # Max value
 ;  b = 0.4         # Valor 'x' donde 'y' es maximo
 ;  c = 0.19                # Desviacion estandar
