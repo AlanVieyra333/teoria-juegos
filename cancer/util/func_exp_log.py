@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import scipy.stats as stats
 
-aumento_tumor = 3
+aumento_tumor = 2
 ticks = 20
 
 def logistic(x):
@@ -30,7 +30,7 @@ def gauss(x):
     a = max(gauss_aux(x)) - 1   # Max value
     b = 0.4         # Valor 'x' donde 'y' es maximo
     c = 0.19                # Desviacion estandar
-    print(a)
+    print('a', a)
     result = a * math.e ** (-(x-b)**2 / (2*c**2))
 
     return 1 + result
@@ -41,6 +41,8 @@ def logistic_aux(x):
     result = np.array([])
 
     g = gauss(x)
+
+    print('g', g)
 
     for gi in g:
         result = np.append(result, cells)

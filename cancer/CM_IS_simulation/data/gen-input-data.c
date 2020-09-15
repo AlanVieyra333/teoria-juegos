@@ -6,7 +6,7 @@
 #include <time.h>
 
 #define TOTAL_FILES 150
-#define NO_TICKS 20
+#define NO_TICKS 10
 
 char* levels[3] = {"debil", "medio", "fuerte"};
 typedef enum { WEAK, MEDIUM, STRONG } level_t;
