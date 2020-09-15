@@ -184,9 +184,9 @@ end
 
 
 to-report gauss [a x]
-  ;set a a / 5.0
-  let b (No.ticks / 2.0) * 2.0 / 5.0
-  let c 2.7
+  set a a / 3.0
+  let b (No.ticks / 1.5) * 2.0 / 5.0
+  let c 2 * No.ticks / 20.0
 
   let result a * (e ^ ( - ((x - b) ^ 2.0) / (2.0 * c ^ 2.0 ) ))
 
@@ -278,7 +278,7 @@ end
 ;------------------------------------- setup
 to setup
   ; Lecture of variable input files. Files eg. {"input_values1.csv", "input_values2.csv", ... , "input_valuesN.csv"} -> "input-values"
-  set filename-template "data/medio-fuerte/input_values"
+  set filename-template "data/medio-medio/input_values"
   set total-files 10
   set file-num random 150 + 1
 
@@ -673,13 +673,16 @@ to go
   ; Cell actions
   mitosis-tumors tumors
 
-  move-natuk natuks -16 16
-
   move-neutr
   neutr-tumor-interc
 
   move-macro
   macro-tumor-interc
+
+  move-natuk natuks -16 16
+
+  ;move-help Th-cells -16 0
+  ;th-tumor-interc
 
 
   ; recruit of innate immune system cells
@@ -960,7 +963,7 @@ to move-natuk[natukstype x y]
     ; Attack
     ;let tumh one-of tumors-here
     if random 100 < ProbOfSAttackSuccesByNk [
-      attack tumh 0
+      attack tumh random (No.Ticks - 6) + 3
     ]
 
     set age age + 1
@@ -971,27 +974,29 @@ end
 ;-------------------------------------helpers movement
 to move-help[helpstype x y]
   ask helpstype [
-    facexy x y ;one-of tumors
-    fd 0.5
-    set age age + 0.5
-    let tumh one-of tumors-here
+    ;facexy x y ;one-of tumors
+    ;fd 0.5
+    let tumh one-of tumors
+    if tumh != nobody [
+      move-to one-of tumors
+    ]
+
+    set age age + 1
+    ;let tumh one-of tumors-here
     if random 100 < ProbOfSuccesOfInterac-Th-Tum [
-    ;aqui ocurre la interaciion de las celulas Th con el tumor
+      ;aqui ocurre la interaciion de las celulas Th con el tumor
     ]
   ]
 end
 
 ;------------------------------------- Th-tumor interaction
 to th-tumor-interc
-  let tumh one-of tumors-here
-  if tumh != nobody
-  [
-    ask Th-cells-here
-    [
+  ask Th-cells [
+    let tumh one-of tumors-here
+
+    if tumh != nobody [
       if random 100 < ProbOfChange-thcells-to-thcells-
       [
-
-
 
       ]
 
