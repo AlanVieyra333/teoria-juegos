@@ -118,7 +118,51 @@ globals [
   tick-init-metastasis-bone
   tick-init-metastasis-lung
   tick-init-metastasis-liver
+  increase-tumor
 ] ; some counts
+
+to-report logistic [x]
+  let a increase-tumor - 1.0
+  let k 9  ;Tasa de crecimiento
+  let x0 0.4
+
+  report 1.0 + ( a / (1.0 + (e ^ (- k * (x - x0)))) )
+end
+
+to-report logistic_proportion [x]
+  set i 0
+  ;let v_result vector:value []
+
+  repeat (No.ticks - 1) [
+
+
+
+    set i i + 1
+  ]
+;  y_log = logistic(x)
+;  y_gauss = np.array([])
+;
+;  y_gauss = np.append(y_gauss, [1])
+;
+;  for i in range(len(y_log) - 1):
+;      y_gauss = np.append(y_gauss, [ y_log[i + 1] / y_log[i] ])
+;
+;  report y_gauss
+end
+
+to-report gauss_aproximation [x]
+;  a = max(gauss_aux(x)) - 1   # Max value
+;  b = 0.4         # Valor 'x' donde 'y' es maximo
+;  c = 0.19                # Desviacion estandar
+;  print(a)
+;  result = a * math.e ** (-(x-b)**2 / (2*c**2))
+;
+;  report 1 + result
+end
+
+to-report recluit-logistic [cells x]
+;  report cells * gauss_aproximation[x]
+end
 
 to-report logistic-exp [x]
   let a 9    ; Tasa de crecimiento
@@ -321,6 +365,7 @@ to clear-vars
   set tick-init-metastasis-bone -1
   set tick-init-metastasis-lung -1
   set tick-init-metastasis-liver -1
+  set increase-tumor 2
 end
 
 to init
