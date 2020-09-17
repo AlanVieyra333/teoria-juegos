@@ -82,6 +82,7 @@ globals [
   ProbOfChange-to-tan1-or-tan2
   ProbOfSuccesOf-tan1
   No-of-desactivating-tumor-cells-by-tan1
+  No-of-desactivating-tumor-cells-by-tam1
   ProbOfSuccesOf-tam1
   recruit-macrophages
   ProbOfSuccesOfInterac-MacrTum
@@ -118,35 +119,39 @@ globals [
   tick-init-metastasis-bone
   tick-init-metastasis-lung
   tick-init-metastasis-liver
+  increase-is
   increase-tumor
-  a-gauss
+  a-gauss-is
+  a-gauss-tumor
+  ticks-is-spread
   ticks-tumor-spread
+  x0-sigmoide-is ; Punto de inflexión sist. inmune
+  x0-sigmoide-tumor ; Punto de inflexión tumor
+  is-cells
+  tumor-cells
 ] ; some counts
 
-to-report logistic [increase x]
+to-report logistic [increase x x0]
   let a increase - 1.0
-  let k 9                     ; Tasa de crecimiento
-  let x0 0.4                  ; Punto de inflexion
+  let k 9                                ; Tasa de crecimiento
 
   report 1.0 + ( a / (1.0 + (e ^ (- k * (x - x0)))) )
 end
 
-to calc-logistic-proportion [increase ticks-spread]
+to-report calc-logistic-proportion [increase ticks-spread x0]
   set i 0
   let d_x 1.0 / (ticks-spread - 1.0)
   let v_result [1]
 
   repeat (ticks-spread - 1) [
-    set v_result lput ( logistic increase ((i + 1) * d_x) / logistic increase ((i) * d_x)) v_result
+    set v_result lput ( logistic increase ((i + 1) * d_x) x0 / logistic increase ((i) * d_x) x0) v_result
     set i i + 1
   ]
 
-  set a-gauss max v_result - 1.0
+  report max v_result - 1.0
 end
 
-to-report gauss-aproximation [x]
-  let a a-gauss
-  let b 0.4
+to-report gauss-aproximation [x a b]
   let c 0.19
 
   let result a * (e ^ ( - ((x - b) ^ 2.0) / (2.0 * (c ^ 2.0) ) ))
@@ -158,28 +163,28 @@ to-report tumors-to-recruit [ticks-spreading]
 ;  report int(gauss 100 t)
   let d_x 1.0 / (ticks-tumor-spread - 1.0)
   let x (ticks-spreading * d_x)
-  report int( (count tumors) * gauss-aproximation x )
+  report int( (count tumors) * gauss-aproximation x a-gauss-tumor x0-sigmoide-tumor)
 end
 
 to-report tumorsb-to-recruit [ticks-spreading]
 ;  report int(gauss 100 t)
   let d_x 1.0 / (ticks-tumor-spread - 1.0)
   let x (ticks-spreading * d_x)
-  report int( (count tumorsb) * gauss-aproximation x )
+  report int( (count tumorsb) * gauss-aproximation x a-gauss-tumor x0-sigmoide-tumor)
 end
 
 to-report tumorsLg-to-recruit [ticks-spreading]
 ;  report int(gauss 100 t)
   let d_x 1.0 / (ticks-tumor-spread - 1.0)
   let x (ticks-spreading * d_x)
-  report int( (count tumorsLg) * gauss-aproximation x )
+  report int( (count tumorsLg) * gauss-aproximation x a-gauss-tumor x0-sigmoide-tumor)
 end
 
 to-report tumorsLv-to-recruit [ticks-spreading]
 ;  report int(gauss 100 t)
   let d_x 1.0 / (ticks-tumor-spread - 1.0)
   let x (ticks-spreading * d_x)
-  report int( (count tumorsLv) * gauss-aproximation x )
+  report int( (count tumorsLv) * gauss-aproximation x a-gauss-tumor x0-sigmoide-tumor)
 end
 
 
@@ -193,16 +198,25 @@ to-report gauss [a x]
   report result
 end
 
-to-report neutrophils-to-recruit [x]
-  report int(gauss recruit-neutrophils x)
+to-report neutrophils-to-recruit [ticks-spreading]
+  ;report int(gauss recruit-neutrophils x)
+  let d_x 1.0 / (ticks-is-spread - 1.0)
+  let x (ticks-spreading * d_x)
+  report int( (count neutrs) * gauss-aproximation x a-gauss-is x0-sigmoide-is)
 end
 
-to-report macrophages-to-recruit [x]
-  report int(gauss recruit-macrophages x)
+to-report macrophages-to-recruit [ticks-spreading]
+  ;report int(gauss recruit-macrophages x)
+  let d_x 1.0 / (ticks-is-spread - 1.0)
+  let x (ticks-spreading * d_x)
+  report int( (count macros) * gauss-aproximation x a-gauss-is x0-sigmoide-is)
 end
 
-to-report natural-killers-to-recruit [x]
-  report int(gauss recruit-natural-killers x)
+to-report natural-killers-to-recruit [ticks-spreading]
+  ;report int(gauss recruit-natural-killers x)
+  let d_x 1.0 / (ticks-is-spread - 1.0)
+  let x (ticks-spreading * d_x)
+  report int( (count natuks) * gauss-aproximation x a-gauss-is x0-sigmoide-is)
 end
 
 ;------------------------------------- cells definitions
@@ -278,9 +292,9 @@ end
 ;------------------------------------- setup
 to setup
   ; Lecture of variable input files. Files eg. {"input_values1.csv", "input_values2.csv", ... , "input_valuesN.csv"} -> "input-values"
-  set filename-template "data/medio-medio/input_values"
-  set total-files 10
-  set file-num random 150 + 1
+  set filename-template (word "data/" is-cancer-strength "/input_values")
+  set total-files 30
+  set file-num 1
 
   init
 end
@@ -320,6 +334,7 @@ to clear-vars
   set ProbOfChange-to-tan1-or-tan2 0
   set ProbOfSuccesOf-tan1 0
   set No-of-desactivating-tumor-cells-by-tan1 0
+  set No-of-desactivating-tumor-cells-by-tam1 0
   set ProbOfSuccesOf-tam1 0
   set recruit-macrophages 0
   set ProbOfSuccesOfInterac-MacrTum 0
@@ -350,9 +365,16 @@ to clear-vars
   set tick-init-metastasis-bone -1
   set tick-init-metastasis-lung -1
   set tick-init-metastasis-liver -1
+  set increase-is 2
   set increase-tumor 2
-  set a-gauss 0
+  set a-gauss-is 0
+  set a-gauss-tumor 0
+  set ticks-is-spread 0
   set ticks-tumor-spread 0
+  set x0-sigmoide-is 0.0
+  set x0-sigmoide-tumor 0.0
+  set is-cells 0
+  set tumor-cells 0
 end
 
 to init
@@ -369,9 +391,12 @@ to init
   ;read of input from files
   set_input (word filename-template file-num ".csv")
 
-  set increase-tumor 5
+  set increase-tumor 4
+  set increase-is 4
+  set ticks-is-spread No.Ticks
   set ticks-tumor-spread No.Ticks
-  calc-logistic-proportion increase-tumor ticks-tumor-spread
+  set a-gauss-is (calc-logistic-proportion increase-is ticks-is-spread x0-sigmoide-is)
+  set a-gauss-tumor (calc-logistic-proportion increase-tumor ticks-tumor-spread x0-sigmoide-tumor)
 
   ;initial conditions of IS and CC cells
   ; -16 0 are the coordinates of the center of the primary tumor world
@@ -558,25 +583,13 @@ to set_input[filename]
   set data csv:from-row file-read-line
   set No.-of-initial-natural-killers-cells item 1 data
 
-  set data csv:from-row file-read-line
-  set recruit-neutrophils item 1 data
 
   set data csv:from-row file-read-line
-  set ProbOfSuccesOfInterac-NeutTum item 1 data
+  set recruit-natural-killers item 1 data
 
   set data csv:from-row file-read-line
-  set ProbOfChange-to-tan1-or-tan2 item 1 data
+  set ProbOfSAttackSuccesByNk item 1 data
 
-  set data csv:from-row file-read-line
-  set ProbOfSuccesOf-tan1 item 1 data
-  set ProbOfSuccesOf-tan2 1 - ProbOfSuccesOf-tan1
-
-  set data csv:from-row file-read-line
-  set No-of-desactivating-tumor-cells-by-tan1 item 1 data
-
-  set data csv:from-row file-read-line
-  set ProbOfSuccesOf-tam1 item 1 data
-  set ProbOfSuccesOf-tam2 1 - ProbOfSuccesOf-tam1
 
   set data csv:from-row file-read-line
   set recruit-macrophages item 1 data
@@ -585,25 +598,38 @@ to set_input[filename]
   set ProbOfSuccesOfInterac-MacrTum item 1 data
 
   set data csv:from-row file-read-line
+  set ProbOfSuccesOf-tam1 item 1 data
+  set ProbOfSuccesOf-tam2 1 - ProbOfSuccesOf-tam1
+
+  set data csv:from-row file-read-line
   set ProbOfChange-to-tam1-or-tam2 item 1 data
-
-  set data csv:from-row file-read-line
-  set recruit-natural-killers item 1 data
-
-  set data csv:from-row file-read-line
-  set ProbOfSAttackSuccesByNk item 1 data
-
-  set data csv:from-row file-read-line
-  set No-of-activating-tumor-cells-by-tan2 item 1 data
 
   set data csv:from-row file-read-line
   set No-of-activating-tumor-cells-by-tam2 item 1 data
 
   set data csv:from-row file-read-line
-  set max-tumors item 1 data
+  set No-of-desactivating-tumor-cells-by-tam1 item 1 data
+
 
   set data csv:from-row file-read-line
-  set No.ticks item 1 data
+  set recruit-neutrophils item 1 data
+
+  set data csv:from-row file-read-line
+  set ProbOfSuccesOfInterac-NeutTum item 1 data
+
+  set data csv:from-row file-read-line
+  set ProbOfSuccesOf-tan1 item 1 data
+  set ProbOfSuccesOf-tan2 1 - ProbOfSuccesOf-tan1
+
+  set data csv:from-row file-read-line
+  set ProbOfChange-to-tan1-or-tan2 item 1 data
+
+  set data csv:from-row file-read-line
+  set No-of-activating-tumor-cells-by-tan2 item 1 data
+
+  set data csv:from-row file-read-line
+  set No-of-desactivating-tumor-cells-by-tan1 item 1 data
+
 
   set data csv:from-row file-read-line
   set max-age-tam1 item 1 data
@@ -620,6 +646,14 @@ to set_input[filename]
   set data csv:from-row file-read-line
   set max-age-nk item 1 data
 
+
+  set data csv:from-row file-read-line
+  set max-tumors item 1 data
+
+  set data csv:from-row file-read-line
+  set No.ticks item 1 data
+
+
   set data csv:from-row file-read-line
   set No.-of-initial-treg-cells item 1 data
 
@@ -635,6 +669,13 @@ to set_input[filename]
 
   set data csv:from-row file-read-line
   set ProbOfAttackSuccesByCd8 item 1 data
+
+
+  set data csv:from-row file-read-line
+  set x0-sigmoide-is (item 1 data) * 0.01
+
+  set data csv:from-row file-read-line
+  set x0-sigmoide-tumor (item 1 data) * 0.01
 
 end
 
@@ -699,6 +740,10 @@ to go
 
   ;METASTASIS
   ;go-metastasis
+
+  set tumor-cells count tumors + tan2 + tam2
+  set is-cells count natuks + tan1 + tam1
+
   tick
 
   ;write current data to files
@@ -807,7 +852,7 @@ to neutr-tumor-interc
           let m count tumors
           let aux list m No-of-desactivating-tumor-cells-by-tan1
           let n min aux
-          ask n-of n tumors [ set age 7 ]
+          ask n-of n tumors [ set age age + 0.5]
         ]
       ]
 
@@ -819,15 +864,15 @@ to neutr-tumor-interc
           let m count tumors
           let aux list m No-of-activating-tumor-cells-by-tan2
           let n min aux
-          ask n-of n tumors [ set age 1 ]
+          ask n-of n tumors [ set age age - 0.5 ]
         ]
       ]
     ]
 
     set age age + 1
 
-    if (tan1?) and (not tan2?) and (not neut?) [ death max-age-tan1 + 3 ]
-    if (tan2?) and (not tan1?) and (not neut?) [ death max-age-tan2 + 2 ]
+    if (tan1?) and (not tan2?) and (not neut?) [ death max-age-tan1]
+    if (tan2?) and (not tan1?) and (not neut?) [ death max-age-tan2]
   ]
 end
 
@@ -853,8 +898,8 @@ to macro-tumor-interc
     ]
 
    set age age + 1
-   if (tam1?) and (not tam2?) and (not macr?) [ death max-age-tam1 + 3 ]
-   if (tam2?) and (not tam1?) and (not macr?) [ death max-age-tam2 + 2 ]
+   if (tam1?) and (not tam2?) and (not macr?) [ death max-age-tam1 ]
+   if (tam2?) and (not tam1?) and (not macr?) [ death max-age-tam2 ]
   ]
 end
 
@@ -963,11 +1008,11 @@ to move-natuk[natukstype x y]
     ; Attack
     ;let tumh one-of tumors-here
     if random 100 < ProbOfSAttackSuccesByNk [
-      attack tumh random (No.Ticks - 6) + 3
+      attack tumh ((No.ticks / 4.0) + random 5)
     ]
 
     set age age + 1
-    death max-age-nk
+    death (max-age-nk - (random 5))
   ]
 end
 
@@ -1009,8 +1054,13 @@ to th-tumor-interc
 end
 
 to attack [ prey aged]
-  if (prey != nobody) and (age >= aged)
-  [ ask prey [ die ] ]
+  if (prey != nobody) [
+    ask prey [
+      if (age >= aged) [
+        die
+      ]
+    ]
+  ]
 end
 
 to death [ maxage ]
@@ -1044,7 +1094,7 @@ to hamilton-1
       set aux aux1 * aux2 * aux3
       ;show(word "wij xj xi="aux)
 
-      ifelse IS i and IS j
+      ifelse IS (i + 1) and IS (j + 1)
       [
 
         set HamiltonIS HamiltonIS - 0.5 * aux
@@ -1058,7 +1108,7 @@ to hamilton-1
     set i i + 1
   ]
   ;show (word "hamilton=" hamilton)
-set hamilton HamiltonTu + HamiltonIS
+  set hamilton HamiltonTu + HamiltonIS
       ;show (word "hamilton" hamilton)
   print_data_hamilton counter
 end
@@ -1069,9 +1119,8 @@ to-report IS [num]
   ifelse num = 2 or num = 3  or num = 5 or num = 6 or num = 8
   [
     report true
-  ]
-  [
-  report false
+  ] [
+    report false
   ]
 end
 
@@ -1108,7 +1157,7 @@ to-report matrix-W
   set i 1
   set l 8
 
-set P probabilities-p
+  set P probabilities-p
   ;create an empty list
   let Waux []
   set i 0
@@ -1161,11 +1210,11 @@ to-report probabilities-p
   set lista-p lput p13 lista-p
   let p14 ProbOfSuccesOf-tan1 * 0.01
   set lista-p lput p14 lista-p
-  let p15 1 - ProbOfSuccesOf-tan1 * 0.01
+  let p15 1 - p14
   set lista-p lput p15 lista-p
   let p16 ProbOfSuccesOf-tam1 * 0.01
   set lista-p lput p16 lista-p
-  let p17 1 - ProbOfSuccesOf-tam2 * 0.01
+  let p17 1 - p16
   set lista-p lput p17 lista-p
   let p18 ProbOfSAttackSuccesByNk * 0.01
   set lista-p lput p18 lista-p
@@ -1176,14 +1225,14 @@ to-report probabilities-p
   ;let p111 65 * 0.01
   ;set lista-p lput p111 lista-p
 
-;show lista-p
+  ;show lista-p
 
-
-let proba []
+  let proba []
   set proba lput lista-p proba
   ;show item 2 lista-p
-let cont 1
- repeat  7
+  let cont 1
+
+  repeat  7
   [
     let iaux 0
     let aux []
@@ -1205,8 +1254,8 @@ let cont 1
   ]
 
   let probabilidades matrix:from-column-list proba
-    ;print matrix:pretty-print-text probabilidades
-report probabilidades
+  ;print matrix:pretty-print-text probabilidades
+  report probabilidades
 end
 
 
@@ -1351,16 +1400,16 @@ to metastasisBone
     move-neutrb
     neutrb-tumor-interc
     set age age + 1
-    if (tan1?) and (not tan2?) and (not neut?) [ death max-age-tan1 + 3 ]
-    if (tan2?) and (not tan1?) and (not neut?) [ death max-age-tan2 + 2 ]
+    if (tan1?) and (not tan2?) and (not neut?) [ death max-age-tan1]
+    if (tan2?) and (not tan1?) and (not neut?) [ death max-age-tan2]
   ]
 
   ask macrosb [
    move-macrob
    macrob-tumor-interc
    set age age + 1
-   if (tam1?) and (not tam2?) and (not macr?) [ death max-age-tam1 + 3 ]
-   if (tam2?) and (not tam1?) and (not macr?) [ death max-age-tam2 + 2 ]
+   if (tam1?) and (not tam2?) and (not macr?) [ death max-age-tam1]
+   if (tam2?) and (not tam1?) and (not macr?) [ death max-age-tam2]
   ]
 
   ask natuksb [
@@ -1598,16 +1647,16 @@ to metastasisLung
     move-neutrLg
     neutrLg-tumor-interc
     set age age + 1
-    if (tan1?) and (not tan2?) and (not neut?) [ death max-age-tan1 + 3 ]
-    if (tan2?) and (not tan1?) and (not neut?) [ death max-age-tan2 + 2 ]
+    if (tan1?) and (not tan2?) and (not neut?) [ death max-age-tan1]
+    if (tan2?) and (not tan1?) and (not neut?) [ death max-age-tan2]
   ]
 
   ask macrosLg [
    move-macroLg
    macroLg-tumor-interc
    set age age + 1
-   if (tam1?) and (not tam2?) and (not macr?) [ death max-age-tam1 + 3 ]
-   if (tam2?) and (not tam1?) and (not macr?) [ death max-age-tam2 + 2 ]
+   if (tam1?) and (not tam2?) and (not macr?) [ death max-age-tam1]
+   if (tam2?) and (not tam1?) and (not macr?) [ death max-age-tam2]
   ]
 
   ask natuksLg [
@@ -1823,16 +1872,16 @@ to metastasisLiver
     move-neutrLv
     neutrLv-tumor-interc
     set age age + 1
-    if (tan1?) and (not tan2?) and (not neut?) [ death max-age-tan1 + 3 ]
-    if (tan2?) and (not tan1?) and (not neut?) [ death max-age-tan2 + 2 ]
+    if (tan1?) and (not tan2?) and (not neut?) [ death max-age-tan1]
+    if (tan2?) and (not tan1?) and (not neut?) [ death max-age-tan2]
   ]
 
   ask macrosLv [
    move-macroLv
    macroLv-tumor-interc
    set age age + 1
-   if (tam1?) and (not tam2?) and (not macr?) [ death max-age-tam1 + 3 ]
-   if (tam2?) and (not tam1?) and (not macr?) [ death max-age-tam2 + 2 ]
+   if (tam1?) and (not tam2?) and (not macr?) [ death max-age-tam1]
+   if (tam2?) and (not tam1?) and (not macr?) [ death max-age-tam2]
   ]
 
   ask natuksLv [
@@ -2034,9 +2083,9 @@ to move-macroLv
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
-386
+337
 10
-883
+834
 508
 -1
 -1
@@ -2061,9 +2110,9 @@ ticks
 30.0
 
 BUTTON
-6
+8
 10
-79
+81
 43
 setup
 setup
@@ -2078,9 +2127,9 @@ NIL
 1
 
 BUTTON
-180
+182
 10
-243
+245
 43
 go
 go
@@ -2095,9 +2144,9 @@ NIL
 1
 
 BUTTON
-84
+86
 10
-174
+176
 43
 go-once
 go
@@ -2112,10 +2161,10 @@ NIL
 1
 
 MONITOR
-13
-56
-126
-101
+9
+149
+121
+194
 No. tumor cells
 count tumors
 17
@@ -2123,10 +2172,10 @@ count tumors
 11
 
 MONITOR
-181
-323
+140
+149
 319
-368
+194
 No. files processed
 (word file-num \"/\" total-files)
 17
@@ -2134,10 +2183,10 @@ No. files processed
 11
 
 MONITOR
-12
-117
-125
-162
+9
+261
+121
+306
 No. neutrophils
 count neutrs
 17
@@ -2145,9 +2194,9 @@ count neutrs
 11
 
 PLOT
-913
+864
 12
-1386
+1337
 360
 Primary tumor cells
 ticks
@@ -2160,18 +2209,14 @@ true
 true
 "" ""
 PENS
-"tumor-cells" 1.0 0 -14454117 true "" "plot count tumors"
-"tan1-cells" 1.0 0 -10402772 true "" "plot tan1"
-"tan2-cells" 1.0 0 -3889007 true "" "plot tan2"
-"tam1-cells" 1.0 0 -13210332 true "" "plot tam1"
-"tam2-cells" 1.0 0 -6565750 true "" "plot tam2"
-"natural-killers" 1.0 0 -2674135 true "" "plot count natuks"
+"Immune-sys" 1.0 0 -2674135 true "" "plot is-cells"
+"Tumor" 1.0 0 -13345367 true "" "plot tumor-cells"
 
 MONITOR
-10
-178
-67
-223
+9
+319
+59
+364
 NIL
 tan1
 17
@@ -2180,9 +2225,9 @@ tan1
 
 MONITOR
 71
-177
-128
-222
+319
+121
+364
 tan2
 tan2
 17
@@ -2190,10 +2235,10 @@ tan2
 11
 
 MONITOR
-180
-142
-318
-187
+9
+375
+121
+420
 No. macrophages
 count macros
 17
@@ -2201,10 +2246,10 @@ count macros
 11
 
 MONITOR
-182
-202
-239
-247
+10
+433
+60
+478
 tam1
 tam1
 17
@@ -2212,10 +2257,10 @@ tam1
 11
 
 MONITOR
-261
-201
-318
-246
+71
+433
+121
+478
 tam2
 tam2
 17
@@ -2223,10 +2268,10 @@ tam2
 11
 
 MONITOR
-181
-263
-319
-308
+9
+204
+121
+249
 No. natural killers
 count natuks
 17
@@ -2234,9 +2279,9 @@ count natuks
 11
 
 BUTTON
-252
+254
 11
-316
+318
 44
 stop
 stop
@@ -2251,7 +2296,7 @@ NIL
 0
 
 SWITCH
-180
+138
 55
 318
 88
@@ -2262,10 +2307,10 @@ stop-replication?
 -1000
 
 MONITOR
-10
-237
-105
-282
+229
+524
+324
+569
 Hamiltonean
 Hamilton
 7
@@ -2273,9 +2318,9 @@ Hamilton
 11
 
 PLOT
-386
+337
 525
-883
+834
 784
 Ising-like hamiltonian function
 Time (Netlogo ticks)
@@ -2288,13 +2333,13 @@ true
 true
 "" ""
 PENS
-"Tumor" 1.0 0 -2674135 true "" "plot HamiltonTu"
-"Immune Sys" 1.0 0 -14454117 true "" "plot HamiltonIS"
+"Tumor" 1.0 0 -13791810 true "" "plot HamiltonTu"
+"Immune Sys" 1.0 0 -2674135 true "" "plot HamiltonIS"
 
 TEXTBOX
-471
+422
 25
-621
+572
 43
 Primary tumor
 11
@@ -2302,9 +2347,9 @@ Primary tumor
 1
 
 TEXTBOX
-715
+666
 27
-898
+849
 45
 Metastasis Bone
 11
@@ -2312,9 +2357,9 @@ Metastasis Bone
 1
 
 TEXTBOX
-464
+415
 268
-614
+565
 286
 Metastasis Lung
 11
@@ -2322,9 +2367,9 @@ Metastasis Lung
 1
 
 TEXTBOX
-716
+667
 273
-866
+817
 291
 Metastasis Liver
 11
@@ -2332,7 +2377,7 @@ Metastasis Liver
 1
 
 SWITCH
-180
+138
 97
 318
 130
@@ -2343,9 +2388,9 @@ graficos
 -1000
 
 PLOT
-1409
+1360
 10
-1880
+1831
 358
 Bone tumor cells
 ticks
@@ -2366,9 +2411,9 @@ PENS
 "natural- killers" 1.0 0 -5298144 true "" "plot  count natuksb"
 
 PLOT
-914
+865
 387
-1385
+1336
 735
 Lung tumor cells
 ticks
@@ -2389,9 +2434,9 @@ PENS
 "natural- killers" 1.0 0 -5298144 true "" "plot  count natuksLg"
 
 PLOT
-1410
+1361
 388
-1881
+1832
 736
 Liver tumor cells
 ticks
@@ -2412,10 +2457,10 @@ PENS
 "natural- killers" 1.0 0 -5298144 true "" "plot  count natuksLv"
 
 MONITOR
-12
-301
-97
-346
+9
+492
+121
+537
 No. Th cells
 count Th-cells
 17
@@ -2423,10 +2468,10 @@ count Th-cells
 11
 
 MONITOR
-14
-366
-96
-411
+10
+551
+122
+596
 No. Tr cells
 count Tr-cells
 17
@@ -2434,10 +2479,10 @@ count Tr-cells
 11
 
 MONITOR
-10
-472
-190
-517
+140
+205
+320
+250
 Tick metastasis bone started
 ifelse-value tick-init-metastasis-bone >= 0 [\n  tick-init-metastasis-bone\n][\n  \"N/A\"\n]
 17
@@ -2445,10 +2490,10 @@ ifelse-value tick-init-metastasis-bone >= 0 [\n  tick-init-metastasis-bone\n][\n
 11
 
 MONITOR
-10
-527
-191
-572
+140
+260
+321
+305
 Tick metastasis lung started
 ifelse-value tick-init-metastasis-lung >= 0 [\n  tick-init-metastasis-lung\n][\n  \"N/A\"\n]
 17
@@ -2456,15 +2501,26 @@ ifelse-value tick-init-metastasis-lung >= 0 [\n  tick-init-metastasis-lung\n][\n
 11
 
 MONITOR
-10
-584
-191
-629
+140
+317
+321
+362
 Tick metastasis liver started
 ifelse-value tick-init-metastasis-liver >= 0 [\n  tick-init-metastasis-liver\n][\n  \"N/A\"\n]
 17
 1
 11
+
+INPUTBOX
+9
+54
+121
+129
+is-cancer-strength
+fuerte-fuerte
+1
+0
+String
 
 @#$#@#$#@
 ## WHAT IS IT?
@@ -2818,6 +2874,125 @@ NetLogo 6.1.1
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@
+<experiments>
+  <experiment name="debil-debil" repetitions="1" runMetricsEveryStep="false">
+    <setup>setup</setup>
+    <go>go</go>
+    <enumeratedValueSet variable="stop-replication?">
+      <value value="false"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="graficos">
+      <value value="false"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="is-cancer-strength">
+      <value value="&quot;debil-debil&quot;"/>
+    </enumeratedValueSet>
+  </experiment>
+  <experiment name="debil-medio" repetitions="1" runMetricsEveryStep="false">
+    <setup>setup</setup>
+    <go>go</go>
+    <enumeratedValueSet variable="stop-replication?">
+      <value value="false"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="graficos">
+      <value value="false"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="is-cancer-strength">
+      <value value="&quot;debil-medio&quot;"/>
+    </enumeratedValueSet>
+  </experiment>
+  <experiment name="debil-fuerte" repetitions="1" runMetricsEveryStep="false">
+    <setup>setup</setup>
+    <go>go</go>
+    <enumeratedValueSet variable="stop-replication?">
+      <value value="false"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="graficos">
+      <value value="false"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="is-cancer-strength">
+      <value value="&quot;debil-fuerte&quot;"/>
+    </enumeratedValueSet>
+  </experiment>
+  <experiment name="medio-debil" repetitions="1" runMetricsEveryStep="false">
+    <setup>setup</setup>
+    <go>go</go>
+    <enumeratedValueSet variable="stop-replication?">
+      <value value="false"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="graficos">
+      <value value="false"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="is-cancer-strength">
+      <value value="&quot;medio-debil&quot;"/>
+    </enumeratedValueSet>
+  </experiment>
+  <experiment name="medio-medio" repetitions="1" runMetricsEveryStep="false">
+    <setup>setup</setup>
+    <go>go</go>
+    <enumeratedValueSet variable="stop-replication?">
+      <value value="false"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="graficos">
+      <value value="false"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="is-cancer-strength">
+      <value value="&quot;medio-medio&quot;"/>
+    </enumeratedValueSet>
+  </experiment>
+  <experiment name="medio-fuerte" repetitions="1" runMetricsEveryStep="false">
+    <setup>setup</setup>
+    <go>go</go>
+    <enumeratedValueSet variable="stop-replication?">
+      <value value="false"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="graficos">
+      <value value="false"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="is-cancer-strength">
+      <value value="&quot;medio-fuerte&quot;"/>
+    </enumeratedValueSet>
+  </experiment>
+  <experiment name="fuerte-fuerte" repetitions="1" runMetricsEveryStep="false">
+    <setup>setup</setup>
+    <go>go</go>
+    <enumeratedValueSet variable="stop-replication?">
+      <value value="false"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="graficos">
+      <value value="false"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="is-cancer-strength">
+      <value value="&quot;fuerte-fuerte&quot;"/>
+    </enumeratedValueSet>
+  </experiment>
+  <experiment name="fuerte-medio" repetitions="1" runMetricsEveryStep="false">
+    <setup>setup</setup>
+    <go>go</go>
+    <enumeratedValueSet variable="stop-replication?">
+      <value value="false"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="graficos">
+      <value value="false"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="is-cancer-strength">
+      <value value="&quot;fuerte-medio&quot;"/>
+    </enumeratedValueSet>
+  </experiment>
+  <experiment name="fuerte-debil" repetitions="1" runMetricsEveryStep="false">
+    <setup>setup</setup>
+    <go>go</go>
+    <enumeratedValueSet variable="stop-replication?">
+      <value value="false"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="graficos">
+      <value value="false"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="is-cancer-strength">
+      <value value="&quot;fuerte-debil&quot;"/>
+    </enumeratedValueSet>
+  </experiment>
+</experiments>
 @#$#@#$#@
 @#$#@#$#@
 default

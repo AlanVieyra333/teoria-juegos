@@ -6,48 +6,70 @@
 #include <time.h>
 
 #define TOTAL_FILES 150
-#define NO_TICKS 20
+#define MAX_AGE 9
+#define MIN_AGE 6
 
 char* levels[3] = {"debil", "medio", "fuerte"};
 typedef enum { WEAK, MEDIUM, STRONG } level_t;
 FILE* f;
 
-void gen(int is_level, int cancer_level) {
-  fprintf(f, "No.-of-initial-tumor-cells,%i\n", rand() % 34 + cancer_level);
-  fprintf(f, "No.-of-initial-neutrophils-cell,%i\n", (int) ((rand() % 34 + is_level) * 0.33));
-  fprintf(f, "No.-of-initial-macrophages-cells,%i\n", (int) ((rand() % 34 + is_level) * 0.33));
-  fprintf(f, "No.-of-initial-natural-killers-cells,%i\n", (int) ((rand() % 34 + is_level) * 0.33));
-  fprintf(f, "recruit-neutrophils,%i\n", rand() % 34 + is_level);
-  fprintf(f, "ProbOfSuccesOfInterac-NeutTum,%i\n", rand() % 34 + is_level);
-  fprintf(f, "ProbOfChange-to-tan1-or-tan2,%i\n", rand() % 34 + is_level);
-  fprintf(f, "ProbOfSuccesOf-tan1,%i\n", rand() % 34 + is_level);
-  fprintf(f, "No-of-desactivating-tumor-cells-by-tan1,%i\n", rand() % 34 + is_level);
-  fprintf(f, "ProbOfSuccesOf-tam1,%i\n", rand() % 34 + is_level);
-  fprintf(f, "recruit-macrophages,%i\n", rand() % 34 + is_level);
-  fprintf(f, "ProbOfSuccesOfInterac-MacrTum,%i\n", rand() % 34 + is_level);
-  fprintf(f, "ProbOfChange-to-tam1-or-tam2,%i\n", rand() % 34 + cancer_level);
-  fprintf(f, "recruit-natural-killers,%i\n", rand() % 34 + is_level);
-  fprintf(f, "ProbOfSAttackSuccesByNk,%i\n", rand() % 34 + is_level);
-  fprintf(f, "No-of-activating-tumor-cells-by-tan2,%i\n", rand() % 34 + cancer_level);
-  fprintf(f, "No-of-activating-tumor-cells-by-tam2,%i\n", rand() % 34 + cancer_level);
+void gen(level_t is_level, level_t cancer_level) {
+  int prop_is_level = is_level * 33;
+  int prop_cancer_level = cancer_level * 33;
+
+  fprintf(f, "No.-of-initial-tumor-cells,%i\n", rand() % 34 + prop_cancer_level);
+  fprintf(f, "No.-of-initial-neutrophils-cell,%i\n", (int) ((rand() % 34 + prop_is_level) * 0.33));
+  fprintf(f, "No.-of-initial-macrophages-cells,%i\n", (int) ((rand() % 34 + prop_is_level) * 0.33));
+  fprintf(f, "No.-of-initial-natural-killers-cells,%i\n", (int) ((rand() % 34 + prop_is_level) * 0.33));
+  
+  fprintf(f, "recruit-natural-killers,%i\n", rand() % 34 + prop_is_level);
+  fprintf(f, "ProbOfSAttackSuccesByNk,%i\n", rand() % 34 + prop_is_level);
+
+  fprintf(f, "recruit-macrophages,%i\n", rand() % 34 + prop_is_level);
+  fprintf(f, "ProbOfSuccesOfInterac-MacrTum,%i\n", rand() % 34 + prop_is_level);
+  fprintf(f, "ProbOfSuccesOf-tam1,%i\n", rand() % 34 + prop_is_level);
+  fprintf(f, "ProbOfChange-to-tam1-or-tam2,%i\n", rand() % 34 + prop_is_level);
+  fprintf(f, "No-of-activating-tumor-cells-by-tam2,%i\n", rand() % 34 + prop_cancer_level);
+  fprintf(f, "No-of-desactivating-tumor-cells-by-tam1,%i\n", rand() % 34 + prop_is_level);
+
+  fprintf(f, "recruit-neutrophils,%i\n", rand() % 34 + prop_is_level);
+  fprintf(f, "ProbOfSuccesOfInterac-NeutTum,%i\n", rand() % 34 + prop_is_level);
+  fprintf(f, "ProbOfSuccesOf-tan1,%i\n", rand() % 34 + prop_is_level);
+  fprintf(f, "ProbOfChange-to-tan1-or-tan2,%i\n", rand() % 34 + prop_is_level);
+  fprintf(f, "No-of-activating-tumor-cells-by-tan2,%i\n", rand() % 34 + prop_cancer_level);
+  fprintf(f, "No-of-desactivating-tumor-cells-by-tan1,%i\n", rand() % 34 + prop_is_level);
+
+  fprintf(f, "max-age-tam1,%d\n", (rand() % (MAX_AGE - MIN_AGE + 1)) + MIN_AGE);
+  fprintf(f, "max-age-tam2,%d\n", (rand() % (MAX_AGE - MIN_AGE + 1)) + MIN_AGE);
+  fprintf(f, "max-age-tan1,%d\n", (rand() % (MAX_AGE - MIN_AGE + 1)) + MIN_AGE);
+  fprintf(f, "max-age-tan2,%d\n", (rand() % (MAX_AGE - MIN_AGE + 1)) + MIN_AGE);
+  fprintf(f, "max-age-nk,%d\n", (rand() % (MAX_AGE - MIN_AGE + 1)) + MIN_AGE);
+
   fprintf(f, "max-tumors,5000\n");
-  fprintf(f, "No.ticks,%d\n", NO_TICKS);
-  fprintf(f, "max-age-tam1,10\n");
-  fprintf(f, "max-age-tam2,10\n");
-  fprintf(f, "max-age-tan1,10\n");
-  fprintf(f, "max-age-tan2,10\n");
-  fprintf(f, "max-age-nk,10\n");
-  fprintf(f, "No.-of-initial-treg-cells,%i\n", rand() % 34 + is_level);
-  fprintf(f, "No.-of-initial-helper-cells,%i\n", rand() % 34 + is_level);
-  fprintf(f, "ProbOfSuccesOfInterac-Th-Tum,%i\n", rand() % 34 + is_level);
-  fprintf(f, "ProbOfChange-thcells-to-thcells-,%i\n", rand() % 34 + is_level);
-  fprintf(f, "ProbOfAttackSuccesByCd8,%i\n", rand() % 34 + is_level);
+  
+  int diff_level = abs(is_level - cancer_level);
+  if (diff_level == 2) {
+    fprintf(f, "No.ticks,%d\n", 20);
+  } else if (diff_level == 1) {
+    fprintf(f, "No.ticks,%d\n", 25);
+  } else if (diff_level == 0) {
+    fprintf(f, "No.ticks,%d\n", 30);
+  }
+
+  fprintf(f, "No.-of-initial-treg-cells,%i\n", rand() % 34 + prop_is_level);
+  fprintf(f, "No.-of-initial-helper-cells,%i\n", rand() % 34 + prop_is_level);
+  fprintf(f, "ProbOfSuccesOfInterac-Th-Tum,%i\n", rand() % 34 + prop_is_level);
+  fprintf(f, "ProbOfChange-thcells-to-thcells-,%i\n", rand() % 34 + prop_is_level);
+  fprintf(f, "ProbOfAttackSuccesByCd8,%i\n", rand() % 34 + prop_is_level);
+
+  fprintf(f, "x0-sigmoide-is,%i\n", rand() % 31 + ((is_level - 2) * - 1) * 20 + 15);
+  fprintf(f, "x0-sigmoide-tumor,%i\n", rand() % 31 + ((cancer_level - 2) * - 1) * 20 + 15);
 }
 
-void gen_data_by_combination(level_t si_level, level_t cancer_level) {
+void gen_data_by_combination(level_t is_level, level_t cancer_level) {
   char folder[100], filename[100];
 
-  sprintf(folder, "%s-%s", levels[si_level], levels[cancer_level]);
+  sprintf(folder, "%s-%s", levels[is_level], levels[cancer_level]);
   mkdir(folder, 0755);
 
   for (size_t i = 1; i <= TOTAL_FILES; i++) {
@@ -58,7 +80,7 @@ void gen_data_by_combination(level_t si_level, level_t cancer_level) {
       fprintf(stderr, "Error en la creacioin del archivo %s.\n", filename);
       break;
     } else {
-      gen(si_level * 33, cancer_level * 33);
+      gen(is_level, cancer_level);
     }
     fclose(f);
   }
