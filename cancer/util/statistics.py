@@ -233,9 +233,9 @@ def get_hamilton(dir):
                 hamilton = float(line.split(',')[1])
 
         if hamilton > 0.0:
-            is_winner += 1
-        else:
             cancer_winner += 1
+        else:
+            is_winner += 1
 
     return is_winner, cancer_winner
 

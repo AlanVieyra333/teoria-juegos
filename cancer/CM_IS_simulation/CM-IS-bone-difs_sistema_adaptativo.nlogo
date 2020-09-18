@@ -788,13 +788,16 @@ to go
 
   ; recruit of innate immune system cells
   let x cordinates -1 1
-  create-neutrs neutrophils-to-recruit ticks [ neutrs-cells setxy x 32 set age 0 ]
+  let y cordinates 1 -1
+  create-neutrs neutrophils-to-recruit ticks [ neutrs-cells setxy x y set age 0 ]
 
   set x cordinates -1 1
-  create-macros macrophages-to-recruit ticks [ macros-cells setxy x 0 set age 0 ]
+  set y cordinates 1 -1
+  create-macros macrophages-to-recruit ticks [ macros-cells setxy x y set age 0 ]
 
-  let y cordinates 1 -1
-  create-natuks natural-killers-to-recruit ticks [ natuks-cells setxy 0 y set age 0 ]
+  set x cordinates -1 1
+  set y cordinates 1 -1
+  create-natuks natural-killers-to-recruit ticks [ natuks-cells setxy x y set age 0 ]
 
   hamilton-1
 
@@ -1049,16 +1052,16 @@ to move-natuk[natukstype x y]
     ]
 
     ; Attack
-    ;let tumh one-of tumors-here
     if random 100 < ProbOfSAttackSuccesByNk [
-      ;if random 100 < 20 [  ; Se mata al 20% de las celulas tumorales actuales.
-      ;attack tumh (random (No.ticks / 1.5))  ; Edad a la que las celulas tumorales son atacadas.
-      ;]
+      set tumh one-of tumors-here
+      if random 100 < 30 [  ; Se mata al 30% de las celulas tumorales actuales.
+        attack tumh 0  ; Edad a la que las celulas tumorales son atacadas.
+      ]
     ]
 
     set age age + 0.5
     if random 100 < 20 [  ; Se mata al 20% de las celulas de natural-killers actuales.
-      ;death 0
+      death 0
     ]
   ]
 end
