@@ -1,11 +1,10 @@
 strength = debil-debil
 
 
-NETLOGO=/opt/netLogo/netlogo-headless.sh
-#NETLOGO=/Applications/NetLogo\ 6.1.1/netlogo-headless.sh
+#NETLOGO=/opt/netLogo/netlogo-headless.sh
+NETLOGO=/Applications/NetLogo\ 6.1.1/netlogo-headless.sh
 
 $(strength): clean
-	echo $(OS)
 	$(NETLOGO) --threads 8 --model CM-IS-bone-difs_sistema_adaptativo.nlogo --experiment $@
 
 clean:

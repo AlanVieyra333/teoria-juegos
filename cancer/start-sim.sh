@@ -3,7 +3,7 @@
 dir_sim="CM_IS_simulation"
 dir_data="$dir_sim/data"
 dir_statistics="util"
-levels=('debil' 'medio' 'fuerte')
+levels=('fuerte' 'medio' 'debil')
 
 pushd $dir_data
 make
