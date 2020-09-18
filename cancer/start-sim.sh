@@ -2,7 +2,7 @@
 
 folder_sim="CM_IS_simulation"
 folder_statistics="util"
-levels=('debil' 'medio' 'fuerte')
+levels=('fuerte' 'medio' 'debil')
 
 for is_level in ${levels[@]}; do
   for cancer_level in ${levels[@]}; do

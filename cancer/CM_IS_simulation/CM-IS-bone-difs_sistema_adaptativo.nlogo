@@ -161,30 +161,58 @@ end
 
 to-report tumors-to-recruit [ticks-spreading]
 ;  report int(gauss 100 t)
-  let d_x 1.0 / (ticks-tumor-spread - 1.0)
-  let x (ticks-spreading * d_x)
-  report int( (count tumors) * gauss-aproximation x a-gauss-tumor x0-sigmoide-tumor)
+  let d_x 1.0 / (ticks-tumor-spread - 1.0)  ; ticks-tumor-spread - Ticks totales para llegar al maximo valor de la curva sigmoide.  d_x - Diferencial de x
+  let x (ticks-spreading * d_x)             ; ticks-spreading - Ticks de vida del tumor.
+
+  let result int( (count tumors) * gauss-aproximation x a-gauss-tumor x0-sigmoide-tumor)
+
+  if result = 0 and random 100 < 50 [
+    set result 1
+  ]
+
+  report result
 end
 
 to-report tumorsb-to-recruit [ticks-spreading]
 ;  report int(gauss 100 t)
   let d_x 1.0 / (ticks-tumor-spread - 1.0)
   let x (ticks-spreading * d_x)
-  report int( (count tumorsb) * gauss-aproximation x a-gauss-tumor x0-sigmoide-tumor)
+
+  let result int( (count tumorsb) * gauss-aproximation x a-gauss-tumor x0-sigmoide-tumor)  ; Aproximacion de la funcion de gauss usando las variables, x, a, y x0 (punto de inflexion)
+
+  if result = 0 and random 100 < 50 [
+    set result 1
+  ]
+
+  report result
 end
 
 to-report tumorsLg-to-recruit [ticks-spreading]
 ;  report int(gauss 100 t)
   let d_x 1.0 / (ticks-tumor-spread - 1.0)
   let x (ticks-spreading * d_x)
-  report int( (count tumorsLg) * gauss-aproximation x a-gauss-tumor x0-sigmoide-tumor)
+
+  let result int( (count tumorsLg) * gauss-aproximation x a-gauss-tumor x0-sigmoide-tumor)  ; Aproximacion de la funcion de gauss usando las variables, x, a, y x0 (punto de inflexion)
+
+  if result = 0 and random 100 < 50 [
+    set result 1
+  ]
+
+  report result
 end
 
 to-report tumorsLv-to-recruit [ticks-spreading]
 ;  report int(gauss 100 t)
   let d_x 1.0 / (ticks-tumor-spread - 1.0)
   let x (ticks-spreading * d_x)
-  report int( (count tumorsLv) * gauss-aproximation x a-gauss-tumor x0-sigmoide-tumor)
+
+  let result int( (count tumorsLv) * gauss-aproximation x a-gauss-tumor x0-sigmoide-tumor)  ; Aproximacion de la funcion de gauss usando las variables, x, a, y x0 (punto de inflexion)
+
+  if result = 0 and random 100 < 50 [
+    set result 1
+  ]
+
+  report result
 end
 
 
@@ -202,21 +230,45 @@ to-report neutrophils-to-recruit [ticks-spreading]
   ;report int(gauss recruit-neutrophils x)
   let d_x 1.0 / (ticks-is-spread - 1.0)
   let x (ticks-spreading * d_x)
-  report int( (count neutrs) * gauss-aproximation x a-gauss-is x0-sigmoide-is)
+
+  let result int( (is-cells) * gauss-aproximation x a-gauss-is x0-sigmoide-is)  ; Aproximacion de la funcion de gauss usando las variables, x, a, y x0 (punto de inflexion)
+  set result result / 2.6
+
+  if result = 0 and random 100 < 33 [
+    set result 1
+  ]
+
+  report result
 end
 
 to-report macrophages-to-recruit [ticks-spreading]
   ;report int(gauss recruit-macrophages x)
   let d_x 1.0 / (ticks-is-spread - 1.0)
   let x (ticks-spreading * d_x)
-  report int( (count macros) * gauss-aproximation x a-gauss-is x0-sigmoide-is)
+
+  let result int( (is-cells) * gauss-aproximation x a-gauss-is x0-sigmoide-is)  ; Aproximacion de la funcion de gauss usando las variables, x, a, y x0 (punto de inflexion)
+  set result result / 2.6
+
+  if result = 0 and random 100 < 33 [
+    set result 1
+  ]
+
+  report result
 end
 
 to-report natural-killers-to-recruit [ticks-spreading]
   ;report int(gauss recruit-natural-killers x)
   let d_x 1.0 / (ticks-is-spread - 1.0)
   let x (ticks-spreading * d_x)
-  report int( (count natuks) * gauss-aproximation x a-gauss-is x0-sigmoide-is)
+
+  let result int( (is-cells) * gauss-aproximation x a-gauss-is x0-sigmoide-is)  ; Aproximacion de la funcion de gauss usando las variables, x, a, y x0 (punto de inflexion)
+  set result result / 2.6
+
+  if result = 0 and random 100 < 33 [
+    set result 1
+  ]
+
+  report result
 end
 
 ;------------------------------------- cells definitions
@@ -293,7 +345,7 @@ end
 to setup
   ; Lecture of variable input files. Files eg. {"input_values1.csv", "input_values2.csv", ... , "input_valuesN.csv"} -> "input-values"
   set filename-template (word "data/" is-cancer-strength "/input_values")
-  set total-files 30
+  set total-files 20
   set file-num 1
 
   init
@@ -391,12 +443,12 @@ to init
   ;read of input from files
   set_input (word filename-template file-num ".csv")
 
-  set increase-tumor 4
-  set increase-is 4
-  set ticks-is-spread No.Ticks
-  set ticks-tumor-spread No.Ticks
-  set a-gauss-is (calc-logistic-proportion increase-is ticks-is-spread x0-sigmoide-is)
-  set a-gauss-tumor (calc-logistic-proportion increase-tumor ticks-tumor-spread x0-sigmoide-tumor)
+  set increase-tumor 4             ; Incremento del tumor maximo posible.
+  set increase-is 4                ; Incremento del sist. inmune maximo posible.
+  set ticks-is-spread No.Ticks     ; Ticks necesarios para llegar al valor maximo de la funcion sigmoide para el sist. inmune.
+  set ticks-tumor-spread No.Ticks  ; Ticks necesarios para llegar al valor maximo de la funcion sigmoide para el tumor.
+  set a-gauss-is (calc-logistic-proportion increase-is ticks-is-spread x0-sigmoide-is)              ; Cálculo de 'a' de la funcion de gauss para el sist. inmune.
+  set a-gauss-tumor (calc-logistic-proportion increase-tumor ticks-tumor-spread x0-sigmoide-tumor)  ; Cálculo de 'a' de la funcion de gauss para el tumor.
 
   ;initial conditions of IS and CC cells
   ; -16 0 are the coordinates of the center of the primary tumor world
@@ -680,8 +732,7 @@ to set_input[filename]
 end
 
 
-;------------------------------------- go
-to go
+to-report should-stop?
   ;--------------------- Automatic stops
   ; too many iterartions
   if ticks >= No.ticks
@@ -693,7 +744,7 @@ to go
       set file-num file-num + 1
       init
     ] [
-      stop
+      report true
     ]
   ]
   ;too large the tumor
@@ -707,20 +758,29 @@ to go
       set file-num file-num + 1
       init
     ] [
-      stop
+      report true
     ]
+  ]
+
+  report false
+end
+
+;------------------------------------- go
+to go
+  if should-stop? [
+    stop
   ]
 
   ; Cell actions
   mitosis-tumors tumors
 
-  move-neutr
-  neutr-tumor-interc
+  ;move-neutr
+  ;neutr-tumor-interc
 
-  move-macro
-  macro-tumor-interc
+  ;move-macro
+  ;macro-tumor-interc
 
-  move-natuk natuks -16 16
+  ;move-natuk natuks -16 16
 
   ;move-help Th-cells -16 0
   ;th-tumor-interc
@@ -741,8 +801,8 @@ to go
   ;METASTASIS
   ;go-metastasis
 
-  set tumor-cells count tumors + tan2 + tam2
-  set is-cells count natuks + tan1 + tam1
+  set tumor-cells count tumors; + tan2 + tam2
+  set is-cells count natuks + count neutrs + count macros; + tan1 + tam1
 
   tick
 
@@ -905,13 +965,8 @@ end
 
 ;------------------------------------- neutrophils movement
 to move-neutr
-  ask neutrs
-  [
-   if (neut?) and (not tan1?) and (not tan2?)
-    [
-      ;facexy -16 0 ;one-of tumors
-      ;facexy -16 16 ;one-of tumors
-      ;fd 0.5
+  ask neutrs [
+    if neut? [
       let tumh one-of tumors
       if tumh != nobody [
         move-to one-of tumors
@@ -922,31 +977,25 @@ to move-neutr
     let tumh one-of tumors-here
     if tumh != nobody [
       if random 100 < ProbOfSuccesOfInterac-NeutTum [
-
-;        ask neutrs-here [
-          ;show ( word "neutrs="count neutrs-here)
-
-          if (neut?) and (not tan2?) and (not tan1?) [
-           ifelse random 100 < ProbOfChange-to-tan1-or-tan2 [  ; probability of change a tan1 or tan2
-             set tan1? true
-             set tan2? false
-             set neut? false
-             set color brown - 2
-             set tan1 tan1 + 1
-           ]
-           [
-
-             set tan1? false
-             set tan2? true
-             set neut? false
-             set color brown + 2
-             set tan2 tan2 + 1
-           ]
+        if neut? [
+          ifelse random 100 < ProbOfChange-to-tan1-or-tan2 [  ; probability of change a tan1 or tan2
+            set tan1? true
+            set tan2? false
+            set neut? false
+            set color brown - 2
+            set tan1 tan1 + 1
+          ] [
+            set tan1? false
+            set tan2? true
+            set neut? false
+            set color brown + 2
+            set tan2 tan2 + 1
           ]
-         rt random 360
-         fd 0.3
-;        ]
-    ]
+        ]
+
+        rt random 360
+        fd 0.3
+      ]
     ]
   ]
 end
@@ -955,9 +1004,6 @@ end
 to move-macro
   ask macros [
     if (macr?) and (not tam1?) and (not tam2?) [
-      ;facexy -16 0 ;one-of tumors
-      ;facexy -16 16 ;one-of tumors
-      ;fd 0.5
       let tumh one-of tumors
       if tumh != nobody [
         move-to one-of tumors
@@ -997,22 +1043,23 @@ end
 to move-natuk[natukstype x y]
   ask natukstype [
     ; Move
-    ;facexy x y ;one-of tumors
-    ;fd 15
     let tumh one-of tumors
     if tumh != nobody [
       move-to one-of tumors
     ]
-;    set age age + 0.5
 
     ; Attack
     ;let tumh one-of tumors-here
     if random 100 < ProbOfSAttackSuccesByNk [
-      attack tumh ((No.ticks / 4.0) + random 5)
+      ;if random 100 < 20 [  ; Se mata al 20% de las celulas tumorales actuales.
+      ;attack tumh (random (No.ticks / 1.5))  ; Edad a la que las celulas tumorales son atacadas.
+      ;]
     ]
 
-    set age age + 1
-    death (max-age-nk - (random 5))
+    set age age + 0.5
+    if random 100 < 20 [  ; Se mata al 20% de las celulas de natural-killers actuales.
+      ;death 0
+    ]
   ]
 end
 
