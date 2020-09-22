@@ -14,14 +14,14 @@ breed [ natuksb natukb ] ; natural killers, NK naturally regulate adaptative imm
 
 ;LUNG
 breed [ tumorsLg tumorbLg ] ; tumor cells corresponding to lung
-; Innate mmune system
+                            ; Innate mmune system
 breed [ neutrsLg neutrLg ] ; neutrophils cells corresponding to lung
 breed [ macrosLg macroLg ] ; macrophages cells corresponding to lung
 breed [ natuksLg natukLg ] ; natural killers, NK naturally regulate adaptative immune system cell proliferation corresponding to lung
 
 ;LIVER
 breed [ tumorsLv tumorbLv ] ; tumor cells corresponding to liver
-; Innate mmune system
+                            ; Innate mmune system
 breed [ neutrsLv neutrLv ] ; neutrophils cells corresponding to liver
 breed [ macrosLv macroLv ] ; macrophages cells corresponding to liver
 breed [ natuksLv natukLv ] ; natural killers, NK naturally regulate adaptative immune system cell proliferation corresponding to liver
@@ -34,16 +34,16 @@ neutrs-own [ neut? tan1? tan2? ]
 neutrsb-own [ neut? tan1? tan2? ]
 neutrsLv-own [ neut? tan1? tan2? ]
 neutrsLg-own [ neut? tan1? tan2? ] ; neut? is a neutrophil
-                                 ; tan1? is a tumor associate neutrophil type 1 (pro-inflamatory antitumor)
-                                 ; tan2? is a tumor associate neutrophil type 2 (pro-tumor anti-inflamatory)
+                                   ; tan1? is a tumor associate neutrophil type 1 (pro-inflamatory antitumor)
+                                   ; tan2? is a tumor associate neutrophil type 2 (pro-tumor anti-inflamatory)
 macros-own [ macr? tam1? tam2? ]
 macrosb-own [ macr? tam1? tam2? ]
 macrosLv-own [ macr? tam1? tam2? ]
 macrosLg-own [ macr? tam1? tam2? ] ; macr? is a macrophage
-                                 ; tam1? is a tumor associate macrophage type 1 (pro-inflamatory antitumor, eats
-                                 ;                                               that tumor cells that are innactive)
-                                 ; tam2? is a tumor associate macrophage type 2 (pro-tumor anti-inflamatory, and
-                                 ;                                          attack some adaptive immune system cells)
+                                   ; tam1? is a tumor associate macrophage type 1 (pro-inflamatory antitumor, eats
+                                   ;                                               that tumor cells that are innactive)
+                                   ; tam2? is a tumor associate macrophage type 2 (pro-tumor anti-inflamatory, and
+                                   ;                                          attack some adaptive immune system cells)
 
 turtles-own [ age ] ; cell age
 
@@ -78,20 +78,20 @@ globals [
   No.-of-initial-macrophages-cells
   No.-of-initial-natural-killers-cells
   recruit-neutrophils
-  ProbOfSuccesOfInterac-NeutTum
-  ProbOfChange-to-tan1-or-tan2
-  ProbOfSuccesOf-tan1
+  SuccesOfInterac-NeutTum
+  Change-to-tan1-or-tan2
+  SuccesOf-tan1
   No-of-desactivating-tumor-cells-by-tan1
   No-of-desactivating-tumor-cells-by-tam1
-  ProbOfSuccesOf-tam1
+  SuccesOf-tam1
   recruit-macrophages
-  ProbOfSuccesOfInterac-MacrTum
-  ProbOfChange-to-tam1-or-tam2
+  SuccesOfInterac-MacrTum
+  Change-to-tam1-or-tam2
   recruit-natural-killers
-  ProbOfSAttackSuccesByNk
-  ProbOfSuccesOf-tan2
+  SAttackSuccesByNk
+  SuccesOf-tan2
   No-of-activating-tumor-cells-by-tan2
-  ProbOfSuccesOf-tam2
+  SuccesOf-tam2
   No-of-activating-tumor-cells-by-tam2
   max-tumors
   No.ticks
@@ -103,10 +103,10 @@ globals [
 
   No.-of-initial-treg-cells
   No.-of-initial-helper-cells
-  ProbOfSuccesOfInterac-Th-Tum
-  ProbOfChange-thcells-to-thcells-
-  ProbOfChange-thcells-to-Cd8
-  ProbOfAttackSuccesByCd8
+  SuccesOfInterac-Th-Tum
+  Change-thcells-to-thcells-
+  Change-thcells-to-Cd8
+  AttackSuccesByCd8
   ;No.-of-initial-cd8-cells
   ;------------------------------------ new variables
   filename-template
@@ -130,6 +130,75 @@ globals [
   is-cells
   tumor-cells
 ] ; some counts
+
+;------------------------------------- cells definitions
+to tumors-cells         ; tumor cells
+  set shape "circle 1"
+  set color blue
+  set size 1
+  if not graficos
+  [
+    set hidden? true
+  ]
+end
+
+
+to neutrs-cells     ; neutrophils cells
+  set shape "circle 1"
+  set color brown
+  set size 1
+  set neut? true
+  set tan1? false
+  set tan2? false
+  if not graficos
+    [
+      set hidden? true
+  ]
+end
+
+to macros-cells        ; macrophages cells
+  set shape "circle 1"
+  set color green
+  set size 1
+  set macr? true
+  set tam1? false
+  set tam2? false
+  if not graficos
+    [
+      set hidden? true
+  ]
+end
+
+to natuks-cells      ; natural killer cells
+  set shape "circle 1"
+  set color red
+  set size 1
+  if  not graficos
+    [
+      set hidden? true
+  ]
+end
+
+to treg-cells         ; Tr-cells cells
+  set color 66
+  set shape "circle 1"
+  set size 1
+  if not graficos
+  [
+    set hidden? true
+  ]
+end
+
+
+to helpers-cells         ; Th-cells cells
+  set color cyan
+  set shape "circle 1"
+  set size 1
+  if not graficos
+  [
+    set hidden? true
+  ]
+end
 
 to-report logistic [increase x x0]
   let a increase - 1.0
@@ -160,7 +229,7 @@ to-report gauss-aproximation [x a b]
 end
 
 to-report tumors-to-recruit [ticks-spreading]
-;  report int(gauss 100 t)
+  ;  report int(gauss 100 t)
   let d_x 1.0 / (ticks-tumor-spread - 1.0)  ; ticks-tumor-spread - Ticks totales para llegar al maximo valor de la curva sigmoide.  d_x - Diferencial de x
   let x (ticks-spreading * d_x)             ; ticks-spreading - Ticks de vida del tumor.
 
@@ -174,7 +243,7 @@ to-report tumors-to-recruit [ticks-spreading]
 end
 
 to-report tumorsb-to-recruit [ticks-spreading]
-;  report int(gauss 100 t)
+  ;  report int(gauss 100 t)
   let d_x 1.0 / (ticks-tumor-spread - 1.0)
   let x (ticks-spreading * d_x)
 
@@ -188,7 +257,7 @@ to-report tumorsb-to-recruit [ticks-spreading]
 end
 
 to-report tumorsLg-to-recruit [ticks-spreading]
-;  report int(gauss 100 t)
+  ;  report int(gauss 100 t)
   let d_x 1.0 / (ticks-tumor-spread - 1.0)
   let x (ticks-spreading * d_x)
 
@@ -202,7 +271,7 @@ to-report tumorsLg-to-recruit [ticks-spreading]
 end
 
 to-report tumorsLv-to-recruit [ticks-spreading]
-;  report int(gauss 100 t)
+  ;  report int(gauss 100 t)
   let d_x 1.0 / (ticks-tumor-spread - 1.0)
   let x (ticks-spreading * d_x)
 
@@ -238,7 +307,7 @@ to-report neutrophils-to-recruit [ticks-spreading]
     set result 1
   ]
 
-  report result
+  report result * 2  ; Por dos para que haya una igualdad de crecimeinto de celulas protumorales y antitumorales.
 end
 
 to-report macrophages-to-recruit [ticks-spreading]
@@ -253,7 +322,7 @@ to-report macrophages-to-recruit [ticks-spreading]
     set result 1
   ]
 
-  report result
+  report result * 2  ; Por dos para que haya una igualdad de crecimeinto de celulas protumorales y antitumorales.
 end
 
 to-report natural-killers-to-recruit [ticks-spreading]
@@ -271,81 +340,11 @@ to-report natural-killers-to-recruit [ticks-spreading]
   report result
 end
 
-;------------------------------------- cells definitions
-to tumors-cells         ; tumor cells
-    set color blue
-    set shape "circle 1"
-    set size 1
-    if not graficos
-    [
-      set hidden? true
-    ]
-end
-
-
-to neutrs-cells     ; neutrophils cells
-  set shape "circle 1"
-  set color brown
-  set size 1
-  set neut? true
-  set tan1? false
-  set tan2? false
-  if not graficos
-    [
-      set hidden? true
-    ]
-end
-
-to macros-cells        ; macrophages cells
-  set shape "circle 1"
-  set color 54
-  set size 1
-  set macr? true
-  set tam1? false
-  set tam2? false
-  if not graficos
-    [
-      set hidden? true
-    ]
-end
-
-to natuks-cells      ; natural killer cells
-  set shape "circle 1"
-  set color red
-  set size 1
-  if  not graficos
-    [
-      set hidden? true
-    ]
-end
-
-to treg-cells         ; Tr-cells cells
-    set color 66
-    set shape "circle 1"
-    set size 1
-    if not graficos
-    [
-      set hidden? true
-    ]
-end
-
-
-to helpers-cells         ; Th-cells cells
-    set color cyan
-    set shape "circle 1"
-    set size 1
-    if not graficos
-    [
-      set hidden? true
-    ]
-
-end
-
 ;------------------------------------- setup
 to setup
   ; Lecture of variable input files. Files eg. {"input_values1.csv", "input_values2.csv", ... , "input_valuesN.csv"} -> "input-values"
   set filename-template (word "data/" is-cancer-strength "/input_values")
-  set total-files 20
+  set total-files 100
   set file-num 1
 
   init
@@ -382,20 +381,20 @@ to clear-vars
   set No.-of-initial-macrophages-cells 0
   set No.-of-initial-natural-killers-cells 0
   set recruit-neutrophils 0
-  set ProbOfSuccesOfInterac-NeutTum 0
-  set ProbOfChange-to-tan1-or-tan2 0
-  set ProbOfSuccesOf-tan1 0
+  set SuccesOfInterac-NeutTum 0
+  set Change-to-tan1-or-tan2 0
+  set SuccesOf-tan1 0
   set No-of-desactivating-tumor-cells-by-tan1 0
   set No-of-desactivating-tumor-cells-by-tam1 0
-  set ProbOfSuccesOf-tam1 0
+  set SuccesOf-tam1 0
   set recruit-macrophages 0
-  set ProbOfSuccesOfInterac-MacrTum 0
-  set ProbOfChange-to-tam1-or-tam2 0
+  set SuccesOfInterac-MacrTum 0
+  set Change-to-tam1-or-tam2 0
   set recruit-natural-killers 0
-  set ProbOfSAttackSuccesByNk 0
-  set ProbOfSuccesOf-tan2 0
+  set SAttackSuccesByNk 0
+  set SuccesOf-tan2 0
   set No-of-activating-tumor-cells-by-tan2 0
-  set ProbOfSuccesOf-tam2 0
+  set SuccesOf-tam2 0
   set No-of-activating-tumor-cells-by-tam2 0
   set max-tumors 0
   set No.ticks 0
@@ -406,10 +405,10 @@ to clear-vars
   set max-age-nk 0
   set No.-of-initial-treg-cells 0
   set No.-of-initial-helper-cells 0
-  set ProbOfSuccesOfInterac-Th-Tum 0
-  set ProbOfChange-thcells-to-thcells- 0
-  set ProbOfChange-thcells-to-Cd8 0
-  set ProbOfAttackSuccesByCd8 0
+  set SuccesOfInterac-Th-Tum 0
+  set Change-thcells-to-thcells- 0
+  set Change-thcells-to-Cd8 0
+  set AttackSuccesByCd8 0
   set can_there_be_metastasis false
   set are_there_metastasis_bone false
   set are_there_metastasis_lung false
@@ -443,10 +442,10 @@ to init
   ;read of input from files
   set_input (word filename-template file-num ".csv")
 
-  set increase-tumor 4             ; Incremento del tumor maximo posible.
-  set increase-is 4                ; Incremento del sist. inmune maximo posible.
-  set ticks-is-spread No.Ticks     ; Ticks necesarios para llegar al valor maximo de la funcion sigmoide para el sist. inmune.
-  set ticks-tumor-spread No.Ticks  ; Ticks necesarios para llegar al valor maximo de la funcion sigmoide para el tumor.
+  set increase-is 2                ; Incremento del sist. inmune maximo posible.
+  set increase-tumor 2             ; Incremento del tumor maximo posible.
+  set ticks-is-spread 12     ; Ticks necesarios para llegar al valor maximo de la funcion sigmoide para el sist. inmune.
+  set ticks-tumor-spread 12  ; Ticks necesarios para llegar al valor maximo de la funcion sigmoide para el tumor.
   set a-gauss-is (calc-logistic-proportion increase-is ticks-is-spread x0-sigmoide-is)              ; Cálculo de 'a' de la funcion de gauss para el sist. inmune.
   set a-gauss-tumor (calc-logistic-proportion increase-tumor ticks-tumor-spread x0-sigmoide-tumor)  ; Cálculo de 'a' de la funcion de gauss para el tumor.
 
@@ -562,38 +561,38 @@ to setup1[cordx cordy a b]
     let y cordinates b -1
     setxy x y
 
-   macros-cells
-   set age 0
+    macros-cells
+    set age 0
   ]
   create-natuks No.-of-initial-natural-killers-cells [
-  let x cordinates a 1
+    let x cordinates a 1
     ;let y random-ycor
     let y cordinates b -1
     setxy x y
 
-   natuks-cells
-   set age 0
+    natuks-cells
+    set age 0
   ]
 
-  create-Th-cells No.-of-initial-helper-cells [
-  let x cordinates a 1
-    ;let y random-ycor
-    let y cordinates b -1
-    setxy x y
-
-   helpers-cells
-   set age 0
-  ]
-
-  create-Tr-cells No.-of-initial-treg-cells [
-  let x cordinates a 1
-    ;let y random-ycor
-    let y cordinates b -1
-    setxy x y
-
-   treg-cells
-   set age 0
-  ]
+;  create-Th-cells No.-of-initial-helper-cells [
+;    let x cordinates a 1
+;    ;let y random-ycor
+;    let y cordinates b -1
+;    setxy x y
+;
+;    helpers-cells
+;    set age 0
+;  ]
+;
+;  create-Tr-cells No.-of-initial-treg-cells [
+;    let x cordinates a 1
+;    ;let y random-ycor
+;    let y cordinates b -1
+;    setxy x y
+;
+;    treg-cells
+;    set age 0
+;  ]
 end
 
 
@@ -640,21 +639,21 @@ to set_input[filename]
   set recruit-natural-killers item 1 data
 
   set data csv:from-row file-read-line
-  set ProbOfSAttackSuccesByNk item 1 data
+  set SAttackSuccesByNk item 1 data
 
 
   set data csv:from-row file-read-line
   set recruit-macrophages item 1 data
 
   set data csv:from-row file-read-line
-  set ProbOfSuccesOfInterac-MacrTum item 1 data
+  set SuccesOfInterac-MacrTum item 1 data
 
   set data csv:from-row file-read-line
-  set ProbOfSuccesOf-tam1 item 1 data
-  set ProbOfSuccesOf-tam2 1 - ProbOfSuccesOf-tam1
+  set SuccesOf-tam1 item 1 data
+  set SuccesOf-tam2 100 - SuccesOf-tam1
 
   set data csv:from-row file-read-line
-  set ProbOfChange-to-tam1-or-tam2 item 1 data
+  set Change-to-tam1-or-tam2 item 1 data
 
   set data csv:from-row file-read-line
   set No-of-activating-tumor-cells-by-tam2 item 1 data
@@ -667,14 +666,14 @@ to set_input[filename]
   set recruit-neutrophils item 1 data
 
   set data csv:from-row file-read-line
-  set ProbOfSuccesOfInterac-NeutTum item 1 data
+  set SuccesOfInterac-NeutTum item 1 data
 
   set data csv:from-row file-read-line
-  set ProbOfSuccesOf-tan1 item 1 data
-  set ProbOfSuccesOf-tan2 1 - ProbOfSuccesOf-tan1
+  set SuccesOf-tan1 item 1 data
+  set SuccesOf-tan2 100 - SuccesOf-tan1
 
   set data csv:from-row file-read-line
-  set ProbOfChange-to-tan1-or-tan2 item 1 data
+  set Change-to-tan1-or-tan2 item 1 data
 
   set data csv:from-row file-read-line
   set No-of-activating-tumor-cells-by-tan2 item 1 data
@@ -713,14 +712,14 @@ to set_input[filename]
   set No.-of-initial-helper-cells item 1 data
 
   set data csv:from-row file-read-line
-  set ProbOfSuccesOfInterac-Th-Tum item 1 data
+  set SuccesOfInterac-Th-Tum item 1 data
 
   set data csv:from-row file-read-line
-  set ProbOfChange-thcells-to-thcells- item 1 data
-  set ProbOfChange-thcells-to-Cd8 100 - ProbOfChange-thcells-to-thcells-
+  set Change-thcells-to-thcells- item 1 data
+  set Change-thcells-to-Cd8 100 - Change-thcells-to-thcells-
 
   set data csv:from-row file-read-line
-  set ProbOfAttackSuccesByCd8 item 1 data
+  set AttackSuccesByCd8 item 1 data
 
 
   set data csv:from-row file-read-line
@@ -774,38 +773,37 @@ to go
   ; Cell actions
   mitosis-tumors tumors
 
-  ;move-neutr
-  ;neutr-tumor-interc
+  move-neutr
+  neutrs-tumors-interc neutrs tumors
 
-  ;move-macro
-  ;macro-tumor-interc
+  move-macro
+  macros-tumors-interc macros tumors
 
-  ;move-natuk natuks -16 16
+  move-natuk natuks -16 16
 
   ;move-help Th-cells -16 0
   ;th-tumor-interc
 
-
-  ; recruit of innate immune system cells
   let x cordinates -1 1
   let y cordinates 1 -1
+  create-natuks natural-killers-to-recruit ticks [ natuks-cells setxy x y set age 0 ]
+
+  ; recruit of innate immune system cells
+  set x cordinates -1 1
+  set y cordinates 1 -1
   create-neutrs neutrophils-to-recruit ticks [ neutrs-cells setxy x y set age 0 ]
 
   set x cordinates -1 1
   set y cordinates 1 -1
   create-macros macrophages-to-recruit ticks [ macros-cells setxy x y set age 0 ]
 
-  set x cordinates -1 1
-  set y cordinates 1 -1
-  create-natuks natural-killers-to-recruit ticks [ natuks-cells setxy x y set age 0 ]
-
   hamilton-1
 
   ;METASTASIS
   ;go-metastasis
 
-  set tumor-cells count tumors; + tan2 + tam2
-  set is-cells count natuks + count neutrs + count macros; + tan1 + tam1
+  set tumor-cells count tumors + tan2 + tam2
+  set is-cells count natuks + count neutrs - tan2 + count macros - tam2
 
   tick
 
@@ -852,26 +850,24 @@ to output_files
   export-plot "Liver tumor cells" (word "log/liver/primary_tumor_graphs" file_number ".csv")
 end
 
-
-
 ;------------------------------------- mitosis-tumors
-to mitosis-tumors [tumorstype]
+to mitosis-tumors [tumors-type]
   if (not stop-replication?) [
-    ask tumorstype [
+    ask tumors-type [
       set age age + 1
       set color blue - 0.25 * age
     ]
 
-    (ifelse is-tumor? one-of tumorstype [
-        create-tumors tumors-to-recruit ticks [
-          setxy -16 16
-          tumors-cells
-          rt random-float 360
-          fd 0.5
-          set age 0
-        ]
+    (ifelse is-tumor? one-of tumors-type [
+      create-tumors tumors-to-recruit ticks [
+        setxy -16 16
+        tumors-cells
+        rt random-float 360
+        fd 0.5
+        set age 0
       ]
-      is-tumorb? one-of tumorstype [
+      ]
+      is-tumorb? one-of tumors-type [
         create-tumorsb tumorsb-to-recruit ticks [
           setxy 16 16
           tumors-cells
@@ -880,7 +876,7 @@ to mitosis-tumors [tumorstype]
           set age 0
         ]
       ]
-      is-tumorbLg? one-of tumorstype [
+      is-tumorbLg? one-of tumors-type [
         create-tumorsLg tumorsLg-to-recruit ticks [
           setxy -16 -16
           tumors-cells
@@ -889,7 +885,7 @@ to mitosis-tumors [tumorstype]
           set age 0
         ]
       ]
-      is-tumorbLv? one-of tumorstype [
+      is-tumorbLv? one-of tumors-type [
         create-tumorsLv tumorsLv-to-recruit ticks [
           setxy 16 -16
           tumors-cells
@@ -902,102 +898,67 @@ to mitosis-tumors [tumorstype]
   ]
 end
 
-;------------------------------------- neutrophils-tumor interaction
-to neutr-tumor-interc
-  ask neutrs [
-    let tumh one-of tumors-here
+;------------------------------------- natural killers movement
+to move-natuk[natukstype x y]
+  ask natukstype [
+    let tumh one-of tumors
+    let kill-percent 5
 
     if tumh != nobody [
-      if random 100 < ProbOfSuccesOf-tan1
-      [
-        if (tan1?) and (not tan2?) and (not neut?)  ; desactivation of tumor replication
-        [
-          let m count tumors
-          let aux list m No-of-desactivating-tumor-cells-by-tan1
-          let n min aux
-          ask n-of n tumors [ set age age + 0.5]
+      move-to tumh
+      rt random 360
+      fd 0.5
+
+      ; Attack
+      if random 100 < SAttackSuccesByNk [
+        attack tumh ((max-age-tan2 + max-age-tam2) / 2.0) kill-percent; Edad a la que las celulas tumorales son atacadas y la probabilidad de que mueran pasando esa edad.
+
+        if tan2 > 0 [
+          ask one-of neutrs [
+            if tan2? and (must-die? max-age-tan2 kill-percent) [
+              set tan2 tan2 - 1
+              die
+            ]
+          ]
         ]
-      ]
-
-      if random 100 < ProbOfSuccesOf-tan2
-      [
-        if (tan2?) and (not tan1?) and (not neut?)  ; activation of tumor replication
-        [
-
-          let m count tumors
-          let aux list m No-of-activating-tumor-cells-by-tan2
-          let n min aux
-          ask n-of n tumors [ set age age - 0.5 ]
+        if tam2 > 0 [
+          ask one-of macros [
+            if tam2? and (must-die? max-age-tam2 kill-percent)[
+              set tam2 tam2 - 1
+              die
+            ]
+          ]
         ]
       ]
     ]
 
     set age age + 1
-
-    if (tan1?) and (not tan2?) and (not neut?) [ death max-age-tan1]
-    if (tan2?) and (not tan1?) and (not neut?) [ death max-age-tan2]
-  ]
-end
-
-;------------------------------------- macrophages-tumor interaction
-to macro-tumor-interc
-  ask macros [
-    let tumh one-of tumors-here
-
-    if tumh != nobody [
-      if random 100 < ProbOfSuccesOf-tam1 [
-        if (tam1?) and (not tam2?) and (not macr?) ; phagocitation of desactive tumor cells
-        [ attack tumh 4 ] ]
-      if random 100 < ProbOfSuccesOf-tam2
-      [
-        if (tam2?) and (not tam1?) and (not macr?) ; activation of tumor replication
-        [
-               let m count tumors
-          let aux list m No-of-activating-tumor-cells-by-tam2
-          let n min aux
-          ask n-of  n tumors [ set age 3 ]
-        ]
-      ]
-    ]
-
-   set age age + 1
-   if (tam1?) and (not tam2?) and (not macr?) [ death max-age-tam1 ]
-   if (tam2?) and (not tam1?) and (not macr?) [ death max-age-tam2 ]
+    death-natuk
   ]
 end
 
 ;------------------------------------- neutrophils movement
 to move-neutr
   ask neutrs [
-    if neut? [
-      let tumh one-of tumors
-      if tumh != nobody [
-        move-to one-of tumors
-      ]
-      set age age + 1
-    ]
+    let tumh one-of tumors
 
-    let tumh one-of tumors-here
-    if tumh != nobody [
-      if random 100 < ProbOfSuccesOfInterac-NeutTum [
-        if neut? [
-          ifelse random 100 < ProbOfChange-to-tan1-or-tan2 [  ; probability of change a tan1 or tan2
-            set tan1? true
-            set tan2? false
-            set neut? false
-            set color brown - 2
-            set tan1 tan1 + 1
-          ] [
-            set tan1? false
-            set tan2? true
-            set neut? false
-            set color brown + 2
-            set tan2 tan2 + 1
-          ]
-        ]
+    if tumh != nobody and neut? and random 100 < SuccesOfInterac-NeutTum [
+      move-to tumh
+      rt random 360
+      fd 0.5
 
-        rt random 360
-        fd 0.3
+      ifelse random 100 < Change-to-tan1-or-tan2 [  ; probability of change a tan1 or tan2
+        set tan1? true
+        set tan2? false
+        set neut? false
+        set color brown - 2
+        set tan1 tan1 + 1
+      ] [
+        set tan1? false
+        set tan2? true
+        set neut? false
+        set color brown + 2
+        set tan2 tan2 + 1
       ]
     ]
   ]
@@ -1006,63 +967,89 @@ end
 ;------------------------------------- macrophages movement
 to move-macro
   ask macros [
-    if (macr?) and (not tam1?) and (not tam2?) [
-      let tumh one-of tumors
-      if tumh != nobody [
-        move-to one-of tumors
-      ]
-      set age age + 1
-    ]
+    let tumh one-of tumors
 
-    let tumh one-of tumors-here
-    if tumh != nobody [
-      if random 100 < ProbOfSuccesOfInterac-MacrTum [
-      ask macros-here [
-        if (macr?) and (not tam2?) and (not tam1?) [
-          ifelse random 100 < ProbOfChange-to-tam1-or-tam2 [  ; probability of change a tan1 or tan2
-            set tam1? true
-            set tam2? false
-            set macr? false
-            set color green - 2
-            set tam1 tam1 + 1
-          ]
-          [
-            set tam1? false
-            set tam2? true
-            set macr? false
-            set color brown + 2
-            set tam2 tam2 + 1
-          ]
-         ]
-         rt random 360
-         fd 0.3
-        ]
+    if tumh != nobody and macr? and random 100 < SuccesOfInterac-MacrTum [
+      move-to tumh
+      rt random 360
+      fd 0.5
+
+      ifelse random 100 < Change-to-tam1-or-tam2 [  ; probability of change a tan1 or tan2
+        set tam1? true
+        set tam2? false
+        set macr? false
+        set color green - 2
+        set tam1 tam1 + 1
+      ] [
+        set tam1? false
+        set tam2? true
+        set macr? false
+        set color brown + 2
+        set tam2 tam2 + 1
       ]
     ]
   ]
 end
 
-;------------------------------------- natural killers movement
-to move-natuk[natukstype x y]
-  ask natukstype [
-    ; Move
-    let tumh one-of tumors
-    if tumh != nobody [
-      move-to one-of tumors
-    ]
+;------------------------------------- neutrophils-tumor interaction
+to neutrs-tumors-interc [neutrs-type tumors-type]
+  ask neutrs-type [
+    let prob-aux random 100
 
-    ; Attack
-    if random 100 < ProbOfSAttackSuccesByNk [
-      set tumh one-of tumors-here
-      if random 100 < 30 [  ; Se mata al 30% de las celulas tumorales actuales.
-        attack tumh 0  ; Edad a la que las celulas tumorales son atacadas.
+    (ifelse tan1? and prob-aux < SuccesOf-tan1 [ ; desactivation of tumor replication
+      let n min list count tumors-type No-of-desactivating-tumor-cells-by-tan1
+      ask n-of n tumors-type [
+        set age age + 0.1
       ]
-    ]
+    ] tan2? and prob-aux < SuccesOf-tan2 [; activation of tumor replication
+      let n min list count tumors-type No-of-activating-tumor-cells-by-tan2
+      ask n-of n tumors-type [
+        set age age - 0.1
+      ]
 
-    set age age + 0.5
-    if random 100 < 20 [  ; Se mata al 20% de las celulas de natural-killers actuales.
-      death 0
-    ]
+      ;if random 100 < 2 [
+      ;  hatch-tumors 1 [
+      ;    tumors-cells
+      ;    rt random-float 360
+      ;    fd 0.5
+      ;    set age 0
+      ;  ]
+      ;]
+    ])
+
+    set age age + 1
+    death-neutr
+  ]
+end
+
+;------------------------------------- macrophages-tumor interaction
+to macros-tumors-interc [macros-type tumors-type]
+  ask macros-type [
+    let prob-aux random 100
+
+    (ifelse tam1? and prob-aux < SuccesOf-tam1 [  ; phagocitation of desactive tumor cells
+      let n min list count tumors-type No-of-desactivating-tumor-cells-by-tam1
+      ask n-of n tumors-type [
+        set age age + 0.1
+      ]
+    ] tam2? and prob-aux < SuccesOf-tam2 [  ; activation of tumor replication
+      let n min list count tumors-type No-of-activating-tumor-cells-by-tam2
+      ask n-of n tumors-type [
+        set age age - 0.1
+      ]
+
+      ;if random 100 < 2 [
+      ;  hatch-tumors 1 [
+      ;    tumors-cells
+      ;    rt random-float 360
+      ;    fd 0.5
+      ;    set age 0
+      ;  ]
+      ;]
+    ])
+
+    set age age + 1
+    death-macro
   ]
 end
 
@@ -1078,7 +1065,7 @@ to move-help[helpstype x y]
 
     set age age + 1
     ;let tumh one-of tumors-here
-    if random 100 < ProbOfSuccesOfInterac-Th-Tum [
+    if random 100 < SuccesOfInterac-Th-Tum [
       ;aqui ocurre la interaciion de las celulas Th con el tumor
     ]
   ]
@@ -1090,90 +1077,123 @@ to th-tumor-interc
     let tumh one-of tumors-here
 
     if tumh != nobody [
-      if random 100 < ProbOfChange-thcells-to-thcells-
+      if random 100 < Change-thcells-to-thcells-
       [
 
       ]
 
-      if random 100 < ProbOfChange-thcells-to-Cd8
+      if random 100 < Change-thcells-to-Cd8
       [
 
-      ]
-    ]
- ]
-end
-
-to attack [ prey aged]
-  if (prey != nobody) [
-    ask prey [
-      if (age >= aged) [
-        die
       ]
     ]
   ]
 end
 
-to death [ maxage ]
-  if (age > maxage) [
-    die
+to attack [ prey max-age prob-kill]
+  if (must-die? max-age prob-kill)[
+    ask prey [ die ]
   ]
+end
+
+to death-natuk
+  if must-die? max-age-nk 4 [ die ]
+end
+
+to death-neutr
+  (ifelse tan1? [
+    if (must-die? max-age-tan1 4) [
+      set tan1 tan1 - 1
+      die
+    ]
+  ] tan2? [
+    if (must-die? max-age-tan2 4) [
+      set tan2 tan2 - 1
+      die
+    ]
+  ])
+end
+
+to death-macro
+  (ifelse tam1? [
+    if (must-die? max-age-tam1 4) [
+      set tam1 tam1 - 1
+      die
+    ]
+  ] tam2? [
+    if (must-die? max-age-tam2 4) [
+      set tam2 tam2 - 1
+      die
+    ]
+  ])
+end
+
+to-report must-die? [ maxage prob-kill]
+  if (age > maxage) and (random 100) < prob-kill [ ; Se mata si la edad de la celula es mayor a la edad maxima, en una proporcion igual a la probabilidad de matar.
+    report true
+  ]
+
+  report false
 end
 
 
 ;Isig hamilton
 to hamilton-1
- set hamilton 0
- let x vector-x
- let W matrix-W
-  let aux 0
-  let aux1 0
-  let aux2 0
-  let aux3 0
+  set hamilton 0
+  set HamiltonIS 0
+  set HamiltonTu 0
+  let x vector-x
+  let W matrix-W
+  let sum1 0
+  let wij 0
+  let xj 0
+  let xi 0
+  let sum2 0
 
   set i  0
   repeat l
   [
-    set aux3 item i x
     set j 0
+    set xi item i x
+
     repeat l
     [
-      set aux1 matrix:get W i j
-      ;"wij=" aux1
-      set aux2 item j x
-      ;show (word "xj=" aux2)
-      set aux aux1 * aux2 * aux3
-      ;show(word "wij xj xi="aux)
+      set xj item j x
+      set wij matrix:get W i j
 
-      ifelse IS (i + 1) and IS (j + 1)
-      [
-
-        set HamiltonIS HamiltonIS - 0.5 * aux
+      ifelse abs(xi) > abs(xj) [
+        set sum1 wij * xi * abs(xj)
+      ] [
+        set sum1 wij * abs(xi) * xj
       ]
-      [
-        set HamiltonTu HamiltonTu - 0.5 * aux
+      ;show(word "wij xj xi=" sum1)
+
+
+      ifelse sum1 >= 0 [
+        set HamiltonIS HamiltonIS - 0.5 * sum1
+      ] [
+        set HamiltonTu HamiltonTu - 0.5 * sum1
       ]
 
       set j j + 1
     ]
+
+    set sum2 item i x
+    ifelse sum2 >= 0 [
+      set HamiltonIS HamiltonIS - sum2
+    ] [
+      set HamiltonTu HamiltonTu - sum2
+    ]
+
     set i i + 1
   ]
+
+
   ;show (word "hamilton=" hamilton)
   set hamilton HamiltonTu + HamiltonIS
-      ;show (word "hamilton" hamilton)
+  ;show (word "hamilton" hamilton)
   print_data_hamilton counter
 end
-
-
-to-report IS [num]
-
-  ifelse num = 2 or num = 3  or num = 5 or num = 6 or num = 8
-  [
-    report true
-  ] [
-    report false
-  ]
-end
-
 
 to-report vector-x
   let x-vector []
@@ -1224,94 +1244,69 @@ to-report matrix-W
       set Aj lput aij Aj
       set j j + 1
     ]
-  ;create row list of matrix W
+    ;create row list of matrix W
     set Waux lput Aj Waux
     set i i + 1
   ]
   ;create the matrix W
   let MatrixW matrix:from-row-list Waux
-;show (word "HamiltonTu= ")
- ; print matrix:pretty-print-text MatrixW
+  ;show (word "HamiltonTu= ")
+  ; print matrix:pretty-print-text MatrixW
 
- report MatrixW
+  report MatrixW
 end
 
 
 ; calculate the  ij element of  W matrix
 to-report elemento-aij[ i1 j1]
-  let auxij 0
+  let aux1 matrix:get Q i1 j1
+  let aux2 matrix:get P i1 j1
 
-let aux1 matrix:get Q i1 j1
-let aux2 matrix:get P i1 j1
-
-set auxij aux1 * aux2
-
-  report auxij
+  report aux1 * aux2
 end
 
 
 ; probabilities matrix
 to-report probabilities-p
-   let lista-p (list 0)
+  let p12 SuccesOfInterac-NeutTum * 0.01  ; Probabilidad de intereaccion entre neutrofilos y el tumor.
 
-  let p12 ProbOfSuccesOfInterac-NeutTum * 0.01
-  set lista-p  lput  p12 lista-p
-  let p13 ProbOfSuccesOfInterac-MacrTum * 0.01
-  set lista-p lput p13 lista-p
-  let p14 ProbOfSuccesOf-tan1 * 0.01
-  set lista-p lput p14 lista-p
-  let p15 1 - p14
-  set lista-p lput p15 lista-p
-  let p16 ProbOfSuccesOf-tam1 * 0.01
-  set lista-p lput p16 lista-p
-  let p17 1 - p16
-  set lista-p lput p17 lista-p
-  let p18 ProbOfSAttackSuccesByNk * 0.01
-  set lista-p lput p18 lista-p
-  ;let p19 75 * 0.01
-  ;set lista-p lput p19 lista-p
-  ;let p110 80 * 0.01
-  ;set lista-p lput p110 lista-p
-  ;let p111 65 * 0.01
-  ;set lista-p lput p111 lista-p
+  let p23 Change-to-tan1-or-tan2 * 0.01   ; Probabilidad de que cambie un neutrofilo a tan1.
+  let p24 1 - p23                         ; Probabilidad de que cambie un neutrofilo a tan2.
 
-  ;show lista-p
+  let p13 p23 * SuccesOf-tan1 * 0.01      ; Probabilidad de exito de ataque de tan1.
+  let p14 1 - p13                         ; Probabilidad de exito de ataque de tan2.
 
-  let proba []
-  set proba lput lista-p proba
-  ;show item 2 lista-p
-  let cont 1
+  let p15 SuccesOfInterac-MacrTum * 0.01  ; Probabilidad de intereaccion entre macrofagos y el tumor.
 
-  repeat  7
-  [
-    let iaux 0
-    let aux []
-    set aux lput item cont lista-p aux
-    repeat 7
-    [
+  let p56 Change-to-tam1-or-tam2 * 0.01   ; Probabilidad de que cambie un macrofago a tam1.
+  let p57 1 - p56                         ; Probabilidad de que cambie un macrofago a tam2.
 
-      ifelse iaux = cont
-      [
-        set aux lput 0 aux
-      ]
-      [
-        set aux lput 1 aux
-      ]
-      set iaux iaux + 1
-    ]
-    set proba lput aux proba
-    set cont cont + 1
-  ]
+  let p16 p56 * SuccesOf-tam1 * 0.01      ; Probabilidad de exito de ataque de tam1.
+  let p17 1 - p16                         ; Probabilidad de exito de ataque de tam2.
 
-  let probabilidades matrix:from-column-list proba
-  ;print matrix:pretty-print-text probabilidades
-  report probabilidades
+  let p18 SAttackSuccesByNk * 0.01        ; Probabilidad de exito de ataque de los natural killers.
+
+  let p-list (list
+    (list 0.0 p12 p13 p14 p15 p16 p17 p18)
+    (list p12 0.0 p23 p24 0.0 0.0 0.0 0.0)
+    (list p13 p23 0.0 0.5 0.0 0.0 0.0 0.0)
+    (list p14 p24 0.5 0.0 0.0 0.0 0.0 0.0)
+    (list p15 0.0 0.0 0.0 0.0 p56 p57 0.0)
+    (list p16 0.0 0.0 0.0 p56 0.0 0.5 0.0)
+    (list p17 0.0 0.0 0.0 p57 0.5 0.0 0.0)
+    (list p18 0.0 0.0 0.0 0.0 0.0 0.0 0.0)
+  )
+
+  let p-matrix matrix:from-column-list p-list
+  ;print matrix:pretty-print-text p-matrix
+
+  report p-matrix
 end
 
 
 ;-------------------------------print output files
 to print_file [string number]
-file-open (word string number ".csv")
+  file-open (word string number ".csv")
   file-type " "
   file-type ","
   file-type "Num of tumor cells"
@@ -1448,28 +1443,26 @@ to metastasisBone
 
   ask neutrsb [
     move-neutrb
-    neutrb-tumor-interc
+    neutrs-tumors-interc neutrsb tumorsb
     set age age + 1
-    if (tan1?) and (not tan2?) and (not neut?) [ death max-age-tan1]
-    if (tan2?) and (not tan1?) and (not neut?) [ death max-age-tan2]
+    death-neutr
   ]
 
   ask macrosb [
-   move-macrob
-   macrob-tumor-interc
-   set age age + 1
-   if (tam1?) and (not tam2?) and (not macr?) [ death max-age-tam1]
-   if (tam2?) and (not tam1?) and (not macr?) [ death max-age-tam2]
+    move-macrob
+    macros-tumors-interc macrosb tumorsb
+    set age age + 1
+    death-macro
   ]
 
   ask natuksb [
-   ;move-natuk natuksb 16 0
-   move-natuk natuksb 16 16
-   set age age + 1
-   death max-age-nk
+    ;move-natuk natuksb 16 0
+    move-natuk natuksb 16 16
+    set age age + 1
+    death-natuk
   ]
 
-; recruit of innate immune system cells
+  ; recruit of innate immune system cells
   let x cordinates 1 1
   create-neutrsb neutrophils-to-recruit (ticks - tick-init-metastasis-bone) [ neutrs-cells setxy x 32 set age 0 ]
 
@@ -1498,90 +1491,30 @@ to setupbone[a b]
     ;let y random-ycor
     let y cordinates b -1
     setxy x y
-   neutrs-cells
-   set age 0
+    neutrs-cells
+    set age 0
   ]
 
   create-macrosb No.-of-initial-macrophages-cells
   [
-   let x cordinates a 1
+    let x cordinates a 1
     ;let y random-ycor
     let y cordinates b -1
     setxy x y
     ;setxy random-xcor random-ycor
-   macros-cells
-   set age 0
+    macros-cells
+    set age 0
   ]
 
   create-natuksb No.-of-initial-natural-killers-cells [
-  let x cordinates a 1
+    let x cordinates a 1
     ;let y random-ycor
     let y cordinates b -1
     setxy x y
     ;setxy random-xcor random-ycor
-   natuks-cells
-   set age 0
+    natuks-cells
+    set age 0
   ]
-
-end
-
-;------------------------------------- neutrophils-tumor interaction corresponding to bone
-to neutrb-tumor-interc
-  let tumh one-of tumorsb-here
-  if tumh != nobody
-  [
-    ask neutrsb-here
-    [
-      if random 100 < ProbOfSuccesOf-tan1
-      [
-        if (tan1?) and (not tan2?) and (not neut?)  ; desactivation of tumor replication
-        [
-
-          let m count tumorsb
-          let aux list m No-of-desactivating-tumor-cells-by-tan1
-          let n min aux
-          ask n-of n tumorsb [ set age 7 ]
-        ]
-      ]
-
-      if random 100 < ProbOfSuccesOf-tan2
-      [
-        if (tan2?) and (not tan1?) and (not neut?)  ; activation of tumor replication
-        [
-
-          let m count tumorsb
-          let aux list m No-of-activating-tumor-cells-by-tan2
-          let n min aux
-          ask n-of n tumorsb [ set age 1 ]
-        ]
-      ]
-
-    ]
- ]
-
-end
-
-;------------------------------------- macrophages-tumor interaction corresponding to bone
-to macrob-tumor-interc
-  let tumh one-of tumorsb-here
-  if tumh != nobody [
-    ask macrosb-here [
-      if random 100 < ProbOfSuccesOf-tam1 [
-        if (tam1?) and (not tam2?) and (not macr?) ; phagocitation of desactive tumor cells
-        [ attack tumh 4 ] ]
-      if random 100 < ProbOfSuccesOf-tam2
-      [
-        if (tam2?) and (not tam1?) and (not macr?) ; activation of tumor replication
-        [
-               let m count tumorsb
-          let aux list m No-of-activating-tumor-cells-by-tam2
-          let n min aux
-          ask n-of  n tumorsb [ set age 3 ]
-        ]
-      ]
-    ]
-  ]
-
 
 end
 
@@ -1589,7 +1522,7 @@ end
 to move-neutrb
   ask neutrsb
   [
-   if (neut?) and (not tan1?) and (not tan2?)
+    if (neut?) and (not tan1?) and (not tan2?)
     [
       ;facexy 16 0 ;one-of tumors
       facexy 16 16 ;one-of tumors
@@ -1599,31 +1532,31 @@ to move-neutrb
 
     let tumh one-of tumorsb-here
     if tumh != nobody [
-      if random 100 < ProbOfSuccesOfInterac-NeutTum [
+      if random 100 < SuccesOfInterac-NeutTum [
 
         ask neutrsb-here [
           ;show ( word "neutrs="count neutrs-here)
 
           if (neut?) and (not tan2?) and (not tan1?) [
-           ifelse random 100 < ProbOfChange-to-tan1-or-tan2 [  ; probability of change a tan1 or tan2
-             set tan1? true
-             set tan2? false
-             set neut? false
-             set color brown - 2
-             set tan1 tan1 + 1
-           ]
-           [
-             set tan1? false
-             set tan2? true
-             set neut? false
-             set color brown + 2
-             set tan2 tan2 + 1
-           ]
+            ifelse random 100 < Change-to-tan1-or-tan2 [  ; probability of change a tan1 or tan2
+              set tan1? true
+              set tan2? false
+              set neut? false
+              set color brown - 2
+              set tan1 tan1 + 1
+            ]
+            [
+              set tan1? false
+              set tan2? true
+              set neut? false
+              set color brown + 2
+              set tan2 tan2 + 1
+            ]
           ]
-         rt random 360
-         fd 0.3
+          rt random 360
+          fd 0.3
         ]
-    ]
+      ]
     ]
   ]
 end
@@ -1631,7 +1564,7 @@ end
 ;------------------------------------- macrophages movement corresponding to bone
 to move-macrob
   ask macrosb [
-   if (macr?) and (not tam1?) and (not tam2?) [
+    if (macr?) and (not tam1?) and (not tam2?) [
       ;facexy 16 0 ;one-of tumors
       facexy 16 16 ;one-of tumors
       fd 0.5
@@ -1639,26 +1572,26 @@ to move-macrob
     ]
     let tumh one-of tumorsb-here
     if tumh != nobody [
-      if random 100 < ProbOfSuccesOfInterac-MacrTum [
-      ask macrosb-here [
-        if (macr?) and (not tam2?) and (not tam1?) [
-          ifelse random 100 < ProbOfChange-to-tam1-or-tam2 [  ; probability of change a tan1 or tan2
-            set tam1? true
-            set tam2? false
-            set macr? false
-            set color green - 2
-            set tam1 tam1 + 1
+      if random 100 < SuccesOfInterac-MacrTum [
+        ask macrosb-here [
+          if (macr?) and (not tam2?) and (not tam1?) [
+            ifelse random 100 < Change-to-tam1-or-tam2 [  ; probability of change a tan1 or tan2
+              set tam1? true
+              set tam2? false
+              set macr? false
+              set color green - 2
+              set tam1 tam1 + 1
+            ]
+            [
+              set tam1? false
+              set tam2? true
+              set macr? false
+              set color brown + 2
+              set tam2 tam2 + 1
+            ]
           ]
-          [
-            set tam1? false
-            set tam2? true
-            set macr? false
-            set color brown + 2
-            set tam2 tam2 + 1
-          ]
-         ]
-         rt random 360
-         fd 0.3
+          rt random 360
+          fd 0.3
         ]
       ]
     ]
@@ -1695,27 +1628,25 @@ to metastasisLung
 
   ask neutrsLg [
     move-neutrLg
-    neutrLg-tumor-interc
+    neutrs-tumors-interc neutrsLg tumorsLg
     set age age + 1
-    if (tan1?) and (not tan2?) and (not neut?) [ death max-age-tan1]
-    if (tan2?) and (not tan1?) and (not neut?) [ death max-age-tan2]
+    death-neutr
   ]
 
   ask macrosLg [
-   move-macroLg
-   macroLg-tumor-interc
-   set age age + 1
-   if (tam1?) and (not tam2?) and (not macr?) [ death max-age-tam1]
-   if (tam2?) and (not tam1?) and (not macr?) [ death max-age-tam2]
+    move-macroLg
+    macros-tumors-interc macrosLg tumorsLg
+    set age age + 1
+    death-macro
   ]
 
   ask natuksLg [
-   move-natuk natuksLg -16 -16
-   set age age + 1
-   death max-age-nk
+    move-natuk natuksLg -16 -16
+    set age age + 1
+    death-natuk
   ]
 
-; recruit of innate immune system cells
+  ; recruit of innate immune system cells
   let x cordinates -1 1
   create-neutrsLg neutrophils-to-recruit (ticks - tick-init-metastasis-lung) [ neutrs-cells setxy x -32 set age 0 ]
 
@@ -1743,88 +1674,28 @@ to setuplung[a b]
     let y cordinates b -1
 
     setxy x y
-   neutrs-cells
-   set age 0
+    neutrs-cells
+    set age 0
   ]
 
   create-macrosLg No.-of-initial-macrophages-cells
   [
-   let x cordinates a 1
+    let x cordinates a 1
     let y cordinates b -1
     setxy x y
     ;setxy random-xcor random-ycor
-   macros-cells
-   set age 0
+    macros-cells
+    set age 0
   ]
 
   create-natuksLg No.-of-initial-natural-killers-cells [
-  let x cordinates a 1
+    let x cordinates a 1
     let y cordinates b -1
     setxy x y
     ;setxy random-xcor random-ycor
-   natuks-cells
-   set age 0
+    natuks-cells
+    set age 0
   ]
-
-end
-
-;------------------------------------- neutrophils-tumor interaction corresponding to bone
-to neutrLg-tumor-interc
-  let tumh one-of tumorsLg-here
-  if tumh != nobody
-  [
-    ask neutrsLg-here
-    [
-      if random 100 < ProbOfSuccesOf-tan1
-      [
-        if (tan1?) and (not tan2?) and (not neut?)  ; desactivation of tumor replication
-        [
-
-          let m count tumorsLg
-          let aux list m No-of-desactivating-tumor-cells-by-tan1
-          let n min aux
-          ask n-of n tumorsLg [ set age 7 ]
-        ]
-      ]
-
-      if random 100 < ProbOfSuccesOf-tan2
-      [
-        if (tan2?) and (not tan1?) and (not neut?)  ; activation of tumor replication
-        [
-
-          let m count tumorsLg
-          let aux list m No-of-activating-tumor-cells-by-tan2
-          let n min aux
-          ask n-of n tumorsLg [ set age 1 ]
-        ]
-      ]
-
-    ]
- ]
-
-end
-
-;------------------------------------- macrophages-tumor interaction corresponding to bone
-to macroLg-tumor-interc
-  let tumh one-of tumorsLg-here
-  if tumh != nobody [
-    ask macrosLg-here [
-      if random 100 < ProbOfSuccesOf-tam1 [
-        if (tam1?) and (not tam2?) and (not macr?) ; phagocitation of desactive tumor cells
-        [ attack tumh 4 ] ]
-      if random 100 < ProbOfSuccesOf-tam2
-      [
-        if (tam2?) and (not tam1?) and (not macr?) ; activation of tumor replication
-        [
-               let m count tumorsLg
-          let aux list m No-of-activating-tumor-cells-by-tam2
-          let n min aux
-          ask n-of  n tumorsLg [ set age 3 ]
-        ]
-      ]
-    ]
-  ]
-
 
 end
 
@@ -1832,7 +1703,7 @@ end
 to move-neutrLg
   ask neutrsLg
   [
-   if (neut?) and (not tan1?) and (not tan2?)
+    if (neut?) and (not tan1?) and (not tan2?)
     [
       facexy -16 -16 ;one-of tumors
       fd 0.5
@@ -1841,31 +1712,31 @@ to move-neutrLg
 
     let tumh one-of tumorsLg-here
     if tumh != nobody [
-      if random 100 < ProbOfSuccesOfInterac-NeutTum [
+      if random 100 < SuccesOfInterac-NeutTum [
 
         ask neutrsLg-here [
           ;show ( word "neutrs="count neutrs-here)
 
           if (neut?) and (not tan2?) and (not tan1?) [
-           ifelse random 100 < ProbOfChange-to-tan1-or-tan2 [  ; probability of change a tan1 or tan2
-             set tan1? true
-             set tan2? false
-             set neut? false
-             set color brown - 2
-             set tan1 tan1 + 1
-           ]
-           [
-             set tan1? false
-             set tan2? true
-             set neut? false
-             set color brown + 2
-             set tan2 tan2 + 1
-           ]
+            ifelse random 100 < Change-to-tan1-or-tan2 [  ; probability of change a tan1 or tan2
+              set tan1? true
+              set tan2? false
+              set neut? false
+              set color brown - 2
+              set tan1 tan1 + 1
+            ]
+            [
+              set tan1? false
+              set tan2? true
+              set neut? false
+              set color brown + 2
+              set tan2 tan2 + 1
+            ]
           ]
-         rt random 360
-         fd 0.3
+          rt random 360
+          fd 0.3
         ]
-    ]
+      ]
     ]
   ]
 end
@@ -1873,33 +1744,33 @@ end
 ;------------------------------------- macrophages movement corresponding to bone
 to move-macroLg
   ask macrosLg [
-   if (macr?) and (not tam1?) and (not tam2?) [
+    if (macr?) and (not tam1?) and (not tam2?) [
       facexy -16 -16 ;one-of tumors
       fd 0.5
       set age age + 1
     ]
     let tumh one-of tumorsLg-here
     if tumh != nobody [
-      if random 100 < ProbOfSuccesOfInterac-MacrTum [
-      ask macrosLg-here [
-        if (macr?) and (not tam2?) and (not tam1?) [
-          ifelse random 100 < ProbOfChange-to-tam1-or-tam2 [  ; probability of change a tan1 or tan2
-            set tam1? true
-            set tam2? false
-            set macr? false
-            set color green - 2
-            set tam1 tam1 + 1
+      if random 100 < SuccesOfInterac-MacrTum [
+        ask macrosLg-here [
+          if (macr?) and (not tam2?) and (not tam1?) [
+            ifelse random 100 < Change-to-tam1-or-tam2 [  ; probability of change a tan1 or tan2
+              set tam1? true
+              set tam2? false
+              set macr? false
+              set color green - 2
+              set tam1 tam1 + 1
+            ]
+            [
+              set tam1? false
+              set tam2? true
+              set macr? false
+              set color brown + 2
+              set tam2 tam2 + 1
+            ]
           ]
-          [
-            set tam1? false
-            set tam2? true
-            set macr? false
-            set color brown + 2
-            set tam2 tam2 + 1
-          ]
-         ]
-         rt random 360
-         fd 0.3
+          rt random 360
+          fd 0.3
         ]
       ]
     ]
@@ -1920,32 +1791,30 @@ to metastasisLiver
 
   ask neutrsLv [
     move-neutrLv
-    neutrLv-tumor-interc
+    neutrs-tumors-interc neutrsLv tumorsLv
     set age age + 1
-    if (tan1?) and (not tan2?) and (not neut?) [ death max-age-tan1]
-    if (tan2?) and (not tan1?) and (not neut?) [ death max-age-tan2]
+    death-neutr
   ]
 
   ask macrosLv [
-   move-macroLv
-   macroLv-tumor-interc
-   set age age + 1
-   if (tam1?) and (not tam2?) and (not macr?) [ death max-age-tam1]
-   if (tam2?) and (not tam1?) and (not macr?) [ death max-age-tam2]
+    move-macroLv
+    macros-tumors-interc macrosLv tumorsLv
+    set age age + 1
+    death-macro
   ]
 
   ask natuksLv [
-   move-natuk natuksLv 16 -16
-   set age age + 1
-   death max-age-nk
+    move-natuk natuksLv 16 -16
+    set age age + 1
+    death-natuk
   ]
 
-; recruit of innate immune system cells
-   let x cordinates 1 1
+  ; recruit of innate immune system cells
+  let x cordinates 1 1
   create-neutrsLv neutrophils-to-recruit (ticks - tick-init-metastasis-liver) [ neutrs-cells setxy x -32 set age 0 ]
 
 
-    let y cordinates -1 -1
+  let y cordinates -1 -1
   create-natuksLv natural-killers-to-recruit (ticks - tick-init-metastasis-liver) [ natuks-cells setxy 0 y set age 0 ]
 
   set x cordinates 1 1
@@ -1969,88 +1838,28 @@ to setupliver[a b]
     let y cordinates b -1
 
     setxy x y
-   neutrs-cells
-   set age 0
+    neutrs-cells
+    set age 0
   ]
 
   create-macrosLv No.-of-initial-macrophages-cells
   [
-   let x cordinates a 1
+    let x cordinates a 1
     let y cordinates b -1
     setxy x y
     ;setxy random-xcor random-ycor
-   macros-cells
-   set age 0
+    macros-cells
+    set age 0
   ]
 
   create-natuksLv No.-of-initial-natural-killers-cells [
-  let x cordinates a 1
+    let x cordinates a 1
     let y cordinates b -1
     setxy x y
     ;setxy random-xcor random-ycor
-   natuks-cells
-   set age 0
+    natuks-cells
+    set age 0
   ]
-
-end
-
-;------------------------------------- neutrophils-tumor interaction corresponding to bone
-to neutrLv-tumor-interc
-  let tumh one-of tumorsLv-here
-  if tumh != nobody
-  [
-    ask neutrsLv-here
-    [
-      if random 100 < ProbOfSuccesOf-tan1
-      [
-        if (tan1?) and (not tan2?) and (not neut?)  ; desactivation of tumor replication
-        [
-
-          let m count tumorsLv
-          let aux list m No-of-desactivating-tumor-cells-by-tan1
-          let n min aux
-          ask n-of n tumorsLv [ set age 7 ]
-        ]
-      ]
-
-      if random 100 < ProbOfSuccesOf-tan2
-      [
-        if (tan2?) and (not tan1?) and (not neut?)  ; activation of tumor replication
-        [
-
-          let m count tumorsLv
-          let aux list m No-of-activating-tumor-cells-by-tan2
-          let n min aux
-          ask n-of n tumorsLv [ set age 1 ]
-        ]
-      ]
-
-    ]
- ]
-
-end
-
-;------------------------------------- macrophages-tumor interaction corresponding to bone
-to macroLv-tumor-interc
-  let tumh one-of tumorsLv-here
-  if tumh != nobody [
-    ask macrosLv-here [
-      if random 100 < ProbOfSuccesOf-tam1 [
-        if (tam1?) and (not tam2?) and (not macr?) ; phagocitation of desactive tumor cells
-        [ attack tumh 4 ] ]
-      if random 100 < ProbOfSuccesOf-tam2
-      [
-        if (tam2?) and (not tam1?) and (not macr?) ; activation of tumor replication
-        [
-               let m count tumorsLv
-          let aux list m No-of-activating-tumor-cells-by-tam2
-          let n min aux
-          ask n-of  n tumorsLv [ set age 3 ]
-        ]
-      ]
-    ]
-  ]
-
 
 end
 
@@ -2058,7 +1867,7 @@ end
 to move-neutrLv
   ask neutrsLv
   [
-   if (neut?) and (not tan1?) and (not tan2?)
+    if (neut?) and (not tan1?) and (not tan2?)
     [
       facexy 16 -16 ;one-of tumors
       fd 0.5
@@ -2067,31 +1876,31 @@ to move-neutrLv
 
     let tumh one-of tumorsLv-here
     if tumh != nobody [
-      if random 100 < ProbOfSuccesOfInterac-NeutTum [
+      if random 100 < SuccesOfInterac-NeutTum [
 
         ask neutrsLv-here [
           ;show ( word "neutrs="count neutrs-here)
 
           if (neut?) and (not tan2?) and (not tan1?) [
-           ifelse random 100 < ProbOfChange-to-tan1-or-tan2 [  ; probability of change a tan1 or tan2
-             set tan1? true
-             set tan2? false
-             set neut? false
-             set color brown - 2
-             set tan1 tan1 + 1
-           ]
-           [
-             set tan1? false
-             set tan2? true
-             set neut? false
-             set color brown + 2
-             set tan2 tan2 + 1
-           ]
+            ifelse random 100 < Change-to-tan1-or-tan2 [  ; probability of change a tan1 or tan2
+              set tan1? true
+              set tan2? false
+              set neut? false
+              set color brown - 2
+              set tan1 tan1 + 1
+            ]
+            [
+              set tan1? false
+              set tan2? true
+              set neut? false
+              set color brown + 2
+              set tan2 tan2 + 1
+            ]
           ]
-         rt random 360
-         fd 0.3
+          rt random 360
+          fd 0.3
         ]
-    ]
+      ]
     ]
   ]
 end
@@ -2099,33 +1908,33 @@ end
 ;------------------------------------- macrophages movement corresponding to bone
 to move-macroLv
   ask macrosLv [
-   if (macr?) and (not tam1?) and (not tam2?) [
+    if (macr?) and (not tam1?) and (not tam2?) [
       facexy 16 -16 ;one-of tumors
       fd 0.5
       set age age + 1
     ]
     let tumh one-of tumorsLv-here
     if tumh != nobody [
-      if random 100 < ProbOfSuccesOfInterac-MacrTum [
-      ask macrosLv-here [
-        if (macr?) and (not tam2?) and (not tam1?) [
-          ifelse random 100 < ProbOfChange-to-tam1-or-tam2 [  ; probability of change a tan1 or tan2
-            set tam1? true
-            set tam2? false
-            set macr? false
-            set color green - 2
-            set tam1 tam1 + 1
+      if random 100 < SuccesOfInterac-MacrTum [
+        ask macrosLv-here [
+          if (macr?) and (not tam2?) and (not tam1?) [
+            ifelse random 100 < Change-to-tam1-or-tam2 [  ; probability of change a tan1 or tan2
+              set tam1? true
+              set tam2? false
+              set macr? false
+              set color green - 2
+              set tam1 tam1 + 1
+            ]
+            [
+              set tam1? false
+              set tam2? true
+              set macr? false
+              set color brown + 2
+              set tam2 tam2 + 1
+            ]
           ]
-          [
-            set tam1? false
-            set tam2? true
-            set macr? false
-            set color brown + 2
-            set tam2 tam2 + 1
-          ]
-         ]
-         rt random 360
-         fd 0.3
+          rt random 360
+          fd 0.3
         ]
       ]
     ]
@@ -2238,7 +2047,7 @@ MONITOR
 121
 306
 No. neutrophils
-count neutrs
+count neutrs - tan1 - tan2
 17
 1
 11
@@ -2290,7 +2099,7 @@ MONITOR
 121
 420
 No. macrophages
-count macros
+count macros - tam1 - tam2
 17
 1
 11
@@ -2357,10 +2166,10 @@ stop-replication?
 -1000
 
 MONITOR
-229
-524
-324
-569
+214
+525
+326
+570
 Hamiltonean
 Hamilton
 7
@@ -2383,8 +2192,9 @@ true
 true
 "" ""
 PENS
-"Tumor" 1.0 0 -13791810 true "" "plot HamiltonTu"
+"Tumor" 1.0 0 -13345367 true "" "plot HamiltonTu"
 "Immune Sys" 1.0 0 -2674135 true "" "plot HamiltonIS"
+"Hamiltonean" 1.0 0 -955883 true "" "plot hamilton"
 
 TEXTBOX
 422
@@ -2476,12 +2286,12 @@ true
 true
 "" ""
 PENS
-"tumor-cells" 1.0 0 -14985354 true "" "plot count tumorsLg"
-"tan1-cells" 1.0 0 -10146808 true "" "plot tan1"
+"tumor-cells" 1.0 0 -13345367 true "" "plot count tumors"
+"tan1-cells" 1.0 0 -10402772 true "" "plot tan1"
 "tan2-cells" 1.0 0 -3889007 true "" "plot tan2"
-"tam1-cells" 1.0 0 -15040220 true "" "plot tam1"
-"tam2-cells" 1.0 0 -8330359 true "" "plot tam2"
-"natural- killers" 1.0 0 -5298144 true "" "plot  count natuksLg"
+"tam1-cells" 1.0 0 -13210332 true "" "plot tam1"
+"tam2-cells" 1.0 0 -6565750 true "" "plot tam2"
+"natural- killers" 1.0 0 -2674135 true "" "plot  count natuks"
 
 PLOT
 1361
@@ -2553,7 +2363,7 @@ ifelse-value tick-init-metastasis-lung >= 0 [\n  tick-init-metastasis-lung\n][\n
 MONITOR
 140
 317
-321
+322
 362
 Tick metastasis liver started
 ifelse-value tick-init-metastasis-liver >= 0 [\n  tick-init-metastasis-liver\n][\n  \"N/A\"\n]
@@ -2571,6 +2381,17 @@ fuerte-fuerte
 1
 0
 String
+
+MONITOR
+214
+580
+326
+625
+Winner
+(ifelse-value hamilton > 0 [\n  \"Cancer\"\n] hamilton < 0 [\n  \"Immune System\"\n] [\n  \"Empate\"\n])
+17
+1
+11
 
 @#$#@#$#@
 ## WHAT IS IT?

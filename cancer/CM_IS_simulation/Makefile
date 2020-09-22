@@ -1,6 +1,5 @@
 strength = debil-debil
 
-
 #NETLOGO=/opt/netLogo/netlogo-headless.sh
 NETLOGO=/Applications/NetLogo\ 6.1.1/netlogo-headless.sh
 

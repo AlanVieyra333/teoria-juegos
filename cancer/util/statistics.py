@@ -19,14 +19,14 @@ dirs = ['CM_IS_simulation/log/']
 out_dir = 'statistics/' + is_cancer_strength + '/'
 # tumors = ['primary_tumor', 'bone', 'liver', 'lung']
 tumors = ['primary_tumor']
-cols = ['Immune-sys', 'Tumors']
-ticks = 1
+cols = ['Hamilton Tumor', 'Hamilton IS', 'Hamilton']
+ticks = 30
 
 np.set_printoptions(precision=4)
 # plt.rcParams['axes.prop_cycle'] = cycler(
 #     'color', ['#1f77b4', '#8c564b', '#ff7f0e', '#196F3D', '#33FF52', '#d62728'])
 plt.rcParams['axes.prop_cycle'] = cycler(
-    'color', ['#d62728', '#1f77b4'])
+    'color', ['blue', 'red', 'orange'])
 
 
 def calc_ticks():
@@ -58,7 +58,7 @@ def calc_ticks():
         ticks += 30
 
 
-calc_ticks()
+# calc_ticks()
 
 
 def read_data_from_file(filename):
@@ -70,25 +70,15 @@ def read_data_from_file(filename):
     f = open(filename, "r")
     lines = f.readlines()
 
-    isNewBlock = False
     startRead = False
 
     for line in lines:
-        if startRead and not '"x"' in line:
-            line = line.replace('"', '')
+        if 'time' in line:
             # print(line)
             values = line.split(",")
             for i in range(len(cols)):
-                data[i, j] = values[(i*4) + 1]
+                data[i, j] = values[i + 1]
             j += 1
-
-        if isNewBlock and 'Immune-sys'.lower() in line.lower():
-            startRead = True
-
-        if line == '\n':
-            isNewBlock = True
-        else:
-            isNewBlock = False
 
     f.close()
     return data
@@ -100,7 +90,7 @@ def read_data_from_directory(dir):
 
     for r, d, f in os.walk(dir):
         for file in f:
-            if '.csv' in file and 'primary_tumor_graphs' in file:
+            if '.csv' in file and 'Hamilton' in file:
                 files.append(os.path.join(r, file))
 
     for filename in files:
@@ -197,7 +187,21 @@ def gen_graph(data, title):
     plt.plot(np.transpose(data))
     plt.legend(cols)
     plt.xlabel('Ticks')
-    plt.ylabel('Number cells')
+    plt.ylabel('Hamilton')
+
+
+def gen_bar_graph(data, title):
+    labels = ['IS', 'Cancer', 'Draw']
+
+    plt.margins(0, 0.15)
+    plt.title(title)
+    plt.bar(labels, data, color=['#FF000080', '#0000FF80', 'orange'])
+
+    for index, value in enumerate(data):
+        plt.text(index, value + 0.5, str(value))
+
+    plt.xlabel('Winner')
+    plt.ylabel('Times won')
 
 
 def export_graph(filename):
@@ -217,6 +221,7 @@ def get_hamilton(dir):
     files = []
     is_winner = 0
     cancer_winner = 0
+    draw = 0
 
     for r, d, f in os.walk(dir):
         for file in f:
@@ -230,14 +235,16 @@ def get_hamilton(dir):
 
         for line in lines:
             if 'time'.lower() in line.lower():
-                hamilton = float(line.split(',')[1])
+                hamilton = float(line.split(',')[3])
 
         if hamilton > 0.0:
             cancer_winner += 1
-        else:
+        elif hamilton < 0.0:
             is_winner += 1
+        else:
+            draw += 1
 
-    return is_winner, cancer_winner
+    return is_winner, cancer_winner, draw
 
 
 create_dirs()
@@ -249,31 +256,35 @@ for dir in dirs:
 
         plt.figure('CM_IS - ' + tumor, figsize=[6.4*1.7, 4.8*1.7])
         plt.title('CM_IS - ' + tumor)
-        plt.subplots_adjust(hspace=0.4)
+        plt.subplots_adjust(hspace=0.5)
 
         mean_data = get_mean_data(data)
         export_data(mean_data, out_dir + 'mean_' + tumor + '.csv')
         plt.subplot(321)
-        gen_graph(mean_data, tumor + ' - Mean')
+        gen_graph(mean_data, tumor +
+                  ' (' + is_cancer_strength + ')' + ' - Mean')
 
         mode_data = get_mode_data(data)
         export_data(mode_data, out_dir + 'mode_' + tumor + '.csv')
         plt.subplot(322)
-        gen_graph(mode_data, tumor + ' - Mode')
+        gen_graph(mode_data, tumor +
+                  ' (' + is_cancer_strength + ')' + ' - Mode')
 
         median_data = get_median_data(data)
         export_data(median_data, out_dir + 'median_' + tumor + '.csv')
         plt.subplot(323)
-        gen_graph(median_data, tumor + ' - Median')
+        gen_graph(median_data, tumor +
+                  ' (' + is_cancer_strength + ')' + ' - Median')
 
         std_data = get_std_data(data)
         export_data(std_data, out_dir + 'std_' + tumor + '.csv')
         plt.subplot(324)
-        gen_graph(std_data, tumor + ' - STD')
+        gen_graph(std_data, tumor + ' (' + is_cancer_strength + ')' + ' - STD')
 
-        is_winner, cancer_winner = get_hamilton(dir + 'primary_tumor')
+        is_winner, cancer_winner, draw = get_hamilton(dir + 'primary_tumor')
         plt.subplot(325)
-        plt.bar([1, 2], [is_winner, cancer_winner])
+        gen_bar_graph([is_winner, cancer_winner, draw], tumor +
+                      ' (' + is_cancer_strength + ')' + ' - Winners')
 
         # plt.show()
         export_graph(out_dir + 'CM_IS - ' + tumor)
