@@ -1,0 +1,25 @@
+; ################## Turtles ##################
+
+breed [tr-cells tr-cell] ; Tregs cells
+breed [th-cells th-cell] ; Helpelrs cells
+breed [t-cells t-cell] ; T cells
+
+; ################## Turtles properties ##################
+
+; ################## Initial setup ##################
+
+;------------------------------------- cells definitions
+; Treg cells
+to setup-tr-cell
+  setup-cell 66
+end
+
+; Helper cells
+to setup-th-cell
+  setup-cell cyan
+end
+
+; T cells
+to setup-t-cell
+  setup-cell cyan + 3
+end

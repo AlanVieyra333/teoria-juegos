@@ -1,51 +1,5 @@
+__includes["lib/utils.nls" "lib/innate-immune-system.nls" "lib/adaptative-immune-system.nls"]
 extensions [ matrix Csv] ;uso de la liberia Netlogo de matrices
-breed [ tumors tumor ] ; tumor cells
-
-; Innate mmune system
-breed [ neutrs neutr ] ; neutrophils cells
-breed [ macros macro ] ; macrophages cells
-breed [ natuks natuk ] ; natural killers, NK naturally regulate adaptative immune system cell proliferation
-
-;BONE
-breed [ tumorsb tumorb ] ; tumor cells corresponding to bone
-breed [ neutrsb neutrb ] ; neutrophils cells corresponding to bone
-breed [ macrosb macrob ] ; macrophages cells corresponding to bone
-breed [ natuksb natukb ] ; natural killers, NK naturally regulate adaptative immune system cell proliferation corresponding to bone
-
-;LUNG
-breed [ tumorsLg tumorbLg ] ; tumor cells corresponding to lung
-                            ; Innate mmune system
-breed [ neutrsLg neutrLg ] ; neutrophils cells corresponding to lung
-breed [ macrosLg macroLg ] ; macrophages cells corresponding to lung
-breed [ natuksLg natukLg ] ; natural killers, NK naturally regulate adaptative immune system cell proliferation corresponding to lung
-
-;LIVER
-breed [ tumorsLv tumorbLv ] ; tumor cells corresponding to liver
-                            ; Innate mmune system
-breed [ neutrsLv neutrLv ] ; neutrophils cells corresponding to liver
-breed [ macrosLv macroLv ] ; macrophages cells corresponding to liver
-breed [ natuksLv natukLv ] ; natural killers, NK naturally regulate adaptative immune system cell proliferation corresponding to liver
-
-breed [Tr-cells Tr-cell] ; Tregs cells
-breed [Th-cells Th-cell] ; Helpelrs cells
-
-
-neutrs-own [ neut? tan1? tan2? ]
-neutrsb-own [ neut? tan1? tan2? ]
-neutrsLv-own [ neut? tan1? tan2? ]
-neutrsLg-own [ neut? tan1? tan2? ] ; neut? is a neutrophil
-                                   ; tan1? is a tumor associate neutrophil type 1 (pro-inflamatory antitumor)
-                                   ; tan2? is a tumor associate neutrophil type 2 (pro-tumor anti-inflamatory)
-macros-own [ macr? tam1? tam2? ]
-macrosb-own [ macr? tam1? tam2? ]
-macrosLv-own [ macr? tam1? tam2? ]
-macrosLg-own [ macr? tam1? tam2? ] ; macr? is a macrophage
-                                   ; tam1? is a tumor associate macrophage type 1 (pro-inflamatory antitumor, eats
-                                   ;                                               that tumor cells that are innactive)
-                                   ; tam2? is a tumor associate macrophage type 2 (pro-tumor anti-inflamatory, and
-                                   ;                                          attack some adaptive immune system cells)
-
-turtles-own [ age ] ; cell age
 
 globals [
   tan1
@@ -131,225 +85,6 @@ globals [
   tumor-cells
 ] ; some counts
 
-;------------------------------------- cells definitions
-to tumors-cells         ; tumor cells
-  set shape "circle 1"
-  set color blue
-  set size 1
-  if not graficos
-  [
-    set hidden? true
-  ]
-end
-
-
-to neutrs-cells     ; neutrophils cells
-  set shape "circle 1"
-  set color brown
-  set size 1
-  set neut? true
-  set tan1? false
-  set tan2? false
-  if not graficos
-    [
-      set hidden? true
-  ]
-end
-
-to macros-cells        ; macrophages cells
-  set shape "circle 1"
-  set color green
-  set size 1
-  set macr? true
-  set tam1? false
-  set tam2? false
-  if not graficos
-    [
-      set hidden? true
-  ]
-end
-
-to natuks-cells      ; natural killer cells
-  set shape "circle 1"
-  set color red
-  set size 1
-  if  not graficos
-    [
-      set hidden? true
-  ]
-end
-
-to treg-cells         ; Tr-cells cells
-  set color 66
-  set shape "circle 1"
-  set size 1
-  if not graficos
-  [
-    set hidden? true
-  ]
-end
-
-
-to helpers-cells         ; Th-cells cells
-  set color cyan
-  set shape "circle 1"
-  set size 1
-  if not graficos
-  [
-    set hidden? true
-  ]
-end
-
-to-report logistic [increase x x0]
-  let a increase - 1.0
-  let k 9                                ; Tasa de crecimiento
-
-  report 1.0 + ( a / (1.0 + (e ^ (- k * (x - x0)))) )
-end
-
-to-report calc-logistic-proportion [increase ticks-spread x0]
-  set i 0
-  let d_x 1.0 / (ticks-spread - 1.0)
-  let v_result [1]
-
-  repeat (ticks-spread - 1) [
-    set v_result lput ( logistic increase ((i + 1) * d_x) x0 / logistic increase ((i) * d_x) x0) v_result
-    set i i + 1
-  ]
-
-  report max v_result - 1.0
-end
-
-to-report gauss-aproximation [x a b]
-  let c 0.19
-
-  let result a * (e ^ ( - ((x - b) ^ 2.0) / (2.0 * (c ^ 2.0) ) ))
-
-  report result
-end
-
-to-report tumors-to-recruit [ticks-spreading]
-  ;  report int(gauss 100 t)
-  let d_x 1.0 / (ticks-tumor-spread - 1.0)  ; ticks-tumor-spread - Ticks totales para llegar al maximo valor de la curva sigmoide.  d_x - Diferencial de x
-  let x (ticks-spreading * d_x)             ; ticks-spreading - Ticks de vida del tumor.
-
-  let result int( (count tumors) * gauss-aproximation x a-gauss-tumor x0-sigmoide-tumor)
-
-  if result = 0 and random 100 < 50 [
-    set result 1
-  ]
-
-  report result
-end
-
-to-report tumorsb-to-recruit [ticks-spreading]
-  ;  report int(gauss 100 t)
-  let d_x 1.0 / (ticks-tumor-spread - 1.0)
-  let x (ticks-spreading * d_x)
-
-  let result int( (count tumorsb) * gauss-aproximation x a-gauss-tumor x0-sigmoide-tumor)  ; Aproximacion de la funcion de gauss usando las variables, x, a, y x0 (punto de inflexion)
-
-  if result = 0 and random 100 < 50 [
-    set result 1
-  ]
-
-  report result
-end
-
-to-report tumorsLg-to-recruit [ticks-spreading]
-  ;  report int(gauss 100 t)
-  let d_x 1.0 / (ticks-tumor-spread - 1.0)
-  let x (ticks-spreading * d_x)
-
-  let result int( (count tumorsLg) * gauss-aproximation x a-gauss-tumor x0-sigmoide-tumor)  ; Aproximacion de la funcion de gauss usando las variables, x, a, y x0 (punto de inflexion)
-
-  if result = 0 and random 100 < 50 [
-    set result 1
-  ]
-
-  report result
-end
-
-to-report tumorsLv-to-recruit [ticks-spreading]
-  ;  report int(gauss 100 t)
-  let d_x 1.0 / (ticks-tumor-spread - 1.0)
-  let x (ticks-spreading * d_x)
-
-  let result int( (count tumorsLv) * gauss-aproximation x a-gauss-tumor x0-sigmoide-tumor)  ; Aproximacion de la funcion de gauss usando las variables, x, a, y x0 (punto de inflexion)
-
-  if result = 0 and random 100 < 50 [
-    set result 1
-  ]
-
-  report result
-end
-
-
-to-report gauss [a x]
-  set a a / 3.0
-  let b (No.ticks / 1.5) * 2.0 / 5.0
-  let c 2 * No.ticks / 20.0
-
-  let result a * (e ^ ( - ((x - b) ^ 2.0) / (2.0 * c ^ 2.0 ) ))
-
-  report result
-end
-
-to-report neutrophils-to-recruit [ticks-spreading]
-  ;report int(gauss recruit-neutrophils x)
-  let d_x 1.0 / (ticks-is-spread - 1.0)
-  let x (ticks-spreading * d_x)
-
-  let result int( (is-cells) * gauss-aproximation x a-gauss-is x0-sigmoide-is)  ; Aproximacion de la funcion de gauss usando las variables, x, a, y x0 (punto de inflexion)
-  set result result / 2.6
-
-  if result = 0 and random 100 < 33 [
-    set result 1
-  ]
-
-  report result * 2  ; Por dos para que haya una igualdad de crecimeinto de celulas protumorales y antitumorales.
-end
-
-to-report macrophages-to-recruit [ticks-spreading]
-  ;report int(gauss recruit-macrophages x)
-  let d_x 1.0 / (ticks-is-spread - 1.0)
-  let x (ticks-spreading * d_x)
-
-  let result int( (is-cells) * gauss-aproximation x a-gauss-is x0-sigmoide-is)  ; Aproximacion de la funcion de gauss usando las variables, x, a, y x0 (punto de inflexion)
-  set result result / 2.6
-
-  if result = 0 and random 100 < 33 [
-    set result 1
-  ]
-
-  report result * 2  ; Por dos para que haya una igualdad de crecimeinto de celulas protumorales y antitumorales.
-end
-
-to-report natural-killers-to-recruit [ticks-spreading]
-  ;report int(gauss recruit-natural-killers x)
-  let d_x 1.0 / (ticks-is-spread - 1.0)
-  let x (ticks-spreading * d_x)
-
-  let result int( (is-cells) * gauss-aproximation x a-gauss-is x0-sigmoide-is)  ; Aproximacion de la funcion de gauss usando las variables, x, a, y x0 (punto de inflexion)
-  set result result / 2.6
-
-  if result = 0 and random 100 < 33 [
-    set result 1
-  ]
-
-  report result
-end
-
-;------------------------------------- setup
-to setup
-  ; Lecture of variable input files. Files eg. {"input_values1.csv", "input_values2.csv", ... , "input_valuesN.csv"} -> "input-values"
-  set filename-template (word "data/" is-cancer-strength "/input_values")
-  set total-files 100
-  set file-num 1
-
-  init
-end
-
 to clear-vars
   set tan1 0
   set tan2 0
@@ -428,6 +163,16 @@ to clear-vars
   set tumor-cells 0
 end
 
+;------------------------------------- setup
+to setup
+  ; Lecture of variable input files. Files eg. {"input_values1.csv", "input_values2.csv", ... , "input_valuesN.csv"} -> "input-values"
+  set filename-template (word "data/" is-cancer-strength "/input_values")
+  set total-files 100
+  set file-num 1
+
+  init
+end
+
 to init
   clear-vars
   clear-ticks
@@ -440,7 +185,7 @@ to init
   file-close-all
 
   ;read of input from files
-  set_input (word filename-template file-num ".csv")
+  set-initial-values-from-file (word filename-template file-num ".csv")
 
   set increase-is 2                ; Incremento del sist. inmune maximo posible.
   set increase-tumor 2             ; Incremento del tumor maximo posible.
@@ -538,7 +283,7 @@ to setup1[cordx cordy a b]
   set  min-tumors 2
   create-tumors No.-of-initial-tumor-cells [
     setxy cordx cordy
-    tumors-cells
+    setup-tumor
     set age 0
   ]
   ask tumors [ fd 0.5 ]
@@ -550,7 +295,7 @@ to setup1[cordx cordy a b]
     let y cordinates b -1
 
     setxy x y
-    neutrs-cells
+    setup-neutr
     set age 0
   ]
 
@@ -561,38 +306,37 @@ to setup1[cordx cordy a b]
     let y cordinates b -1
     setxy x y
 
-    macros-cells
+    setup-macro
     set age 0
   ]
   create-natuks No.-of-initial-natural-killers-cells [
     let x cordinates a 1
-    ;let y random-ycor
     let y cordinates b -1
     setxy x y
 
-    natuks-cells
+    setup-natuk
     set age 0
   ]
 
-;  create-Th-cells No.-of-initial-helper-cells [
-;    let x cordinates a 1
-;    ;let y random-ycor
-;    let y cordinates b -1
-;    setxy x y
-;
-;    helpers-cells
-;    set age 0
-;  ]
-;
-;  create-Tr-cells No.-of-initial-treg-cells [
-;    let x cordinates a 1
-;    ;let y random-ycor
-;    let y cordinates b -1
-;    setxy x y
-;
-;    treg-cells
-;    set age 0
-;  ]
+  ;  create-th-cells No.-of-initial-helper-cells [
+  ;    let x cordinates a 1
+  ;    ;let y random-ycor
+  ;    let y cordinates b -1
+  ;    setxy x y
+  ;
+  ;    setup-th-cell
+  ;    set age 0
+  ;  ]
+  ;
+  ;  create-tr-cells No.-of-initial-treg-cells [
+  ;    let x cordinates a 1
+  ;    ;let y random-ycor
+  ;    let y cordinates b -1
+  ;    setxy x y
+  ;
+  ;    setup-tr-cell
+  ;    set age 0
+  ;  ]
 end
 
 
@@ -617,125 +361,10 @@ to-report cordinates[sign crd]
   report cord
 end
 
-;read of all initial values from a file
-to set_input[filename]
-  ;open file wich contains input values
-  file-open filename
-
-  set data csv:from-row file-read-line
-  set No.-of-initial-tumor-cells item 1 data
-
-  set data csv:from-row file-read-line
-  set No.-of-initial-neutrophils-cell item 1 data
-
-  set data csv:from-row file-read-line
-  set No.-of-initial-macrophages-cells item 1 data
-
-  set data csv:from-row file-read-line
-  set No.-of-initial-natural-killers-cells item 1 data
-
-
-  set data csv:from-row file-read-line
-  set recruit-natural-killers item 1 data
-
-  set data csv:from-row file-read-line
-  set SAttackSuccesByNk item 1 data
-
-
-  set data csv:from-row file-read-line
-  set recruit-macrophages item 1 data
-
-  set data csv:from-row file-read-line
-  set SuccesOfInterac-MacrTum item 1 data
-
-  set data csv:from-row file-read-line
-  set SuccesOf-tam1 item 1 data
-  set SuccesOf-tam2 100 - SuccesOf-tam1
-
-  set data csv:from-row file-read-line
-  set Change-to-tam1-or-tam2 item 1 data
-
-  set data csv:from-row file-read-line
-  set No-of-activating-tumor-cells-by-tam2 item 1 data
-
-  set data csv:from-row file-read-line
-  set No-of-desactivating-tumor-cells-by-tam1 item 1 data
-
-
-  set data csv:from-row file-read-line
-  set recruit-neutrophils item 1 data
-
-  set data csv:from-row file-read-line
-  set SuccesOfInterac-NeutTum item 1 data
-
-  set data csv:from-row file-read-line
-  set SuccesOf-tan1 item 1 data
-  set SuccesOf-tan2 100 - SuccesOf-tan1
-
-  set data csv:from-row file-read-line
-  set Change-to-tan1-or-tan2 item 1 data
-
-  set data csv:from-row file-read-line
-  set No-of-activating-tumor-cells-by-tan2 item 1 data
-
-  set data csv:from-row file-read-line
-  set No-of-desactivating-tumor-cells-by-tan1 item 1 data
-
-
-  set data csv:from-row file-read-line
-  set max-age-tam1 item 1 data
-
-  set data csv:from-row file-read-line
-  set max-age-tam2 item 1 data
-
-  set data csv:from-row file-read-line
-  set max-age-tan1 item 1 data
-
-  set data csv:from-row file-read-line
-  set max-age-tan2 item 1 data
-
-  set data csv:from-row file-read-line
-  set max-age-nk item 1 data
-
-
-  set data csv:from-row file-read-line
-  set max-tumors item 1 data
-
-  set data csv:from-row file-read-line
-  set No.ticks item 1 data
-
-
-  set data csv:from-row file-read-line
-  set No.-of-initial-treg-cells item 1 data
-
-  set data csv:from-row file-read-line
-  set No.-of-initial-helper-cells item 1 data
-
-  set data csv:from-row file-read-line
-  set SuccesOfInterac-Th-Tum item 1 data
-
-  set data csv:from-row file-read-line
-  set Change-thcells-to-thcells- item 1 data
-  set Change-thcells-to-Cd8 100 - Change-thcells-to-thcells-
-
-  set data csv:from-row file-read-line
-  set AttackSuccesByCd8 item 1 data
-
-
-  set data csv:from-row file-read-line
-  set x0-sigmoide-is (item 1 data) * 0.01
-
-  set data csv:from-row file-read-line
-  set x0-sigmoide-tumor (item 1 data) * 0.01
-
-end
-
-
+;--------------------- Automatic stops
 to-report should-stop?
-  ;--------------------- Automatic stops
   ; too many iterartions
-  if ticks >= No.ticks
-  [
+  if ticks >= No.ticks [
     output_files
     file-close-all
 
@@ -746,9 +375,9 @@ to-report should-stop?
       report true
     ]
   ]
+
   ;too large the tumor
-  if count tumors >= max-tumors
-  [
+  if count tumors >= max-tumors [
     output_files
     user-message "Demasiado grande el tumor"
     file-close-all
@@ -781,21 +410,21 @@ to go
 
   move-natuk natuks -16 16
 
-  ;move-help Th-cells -16 0
+  ;move-help th-cells -16 0
   ;th-tumor-interc
 
   let x cordinates -1 1
   let y cordinates 1 -1
-  create-natuks natural-killers-to-recruit ticks [ natuks-cells setxy x y set age 0 ]
+  create-natuks is-cells-to-recruit ticks is-cells [ setup-natuk setxy x y set age 0 ]
 
   ; recruit of innate immune system cells
   set x cordinates -1 1
   set y cordinates 1 -1
-  create-neutrs neutrophils-to-recruit ticks [ neutrs-cells setxy x y set age 0 ]
+  create-neutrs is-cells-to-recruit ticks is-cells [ setup-neutr setxy x y set age 0 ]
 
   set x cordinates -1 1
   set y cordinates 1 -1
-  create-macros macrophages-to-recruit ticks [ macros-cells setxy x y set age 0 ]
+  create-macros is-cells-to-recruit ticks is-cells [ setup-macro setxy x y set age 0 ]
 
   hamilton-1
 
@@ -859,36 +488,36 @@ to mitosis-tumors [tumors-type]
     ]
 
     (ifelse is-tumor? one-of tumors-type [
-      create-tumors tumors-to-recruit ticks [
+      create-tumors tumor-cells-to-recruit ticks count tumors [
         setxy -16 16
-        tumors-cells
+        setup-tumor
         rt random-float 360
         fd 0.5
         set age 0
       ]
       ]
-      is-tumorb? one-of tumors-type [
-        create-tumorsb tumorsb-to-recruit ticks [
+      is-tumorB? one-of tumors-type [
+        create-tumorsB tumor-cells-to-recruit ticks count tumorsB [
           setxy 16 16
-          tumors-cells
+          setup-tumor
           rt random-float 360
           fd 0.5
           set age 0
         ]
       ]
-      is-tumorbLg? one-of tumors-type [
-        create-tumorsLg tumorsLg-to-recruit ticks [
+      is-tumorLg? one-of tumors-type [
+        create-tumorsLg tumor-cells-to-recruit ticks count tumorsLg [
           setxy -16 -16
-          tumors-cells
+          setup-tumor
           rt random-float 360
           fd 0.5
           set age 0
         ]
       ]
-      is-tumorbLv? one-of tumors-type [
-        create-tumorsLv tumorsLv-to-recruit ticks [
+      is-tumorLv? one-of tumors-type [
+        create-tumorsLv tumor-cells-to-recruit ticks count tumorsLv [
           setxy 16 -16
-          tumors-cells
+          setup-tumor
           rt random-float 360
           fd 0.5
           set age 0
@@ -1009,7 +638,7 @@ to neutrs-tumors-interc [neutrs-type tumors-type]
 
       ;if random 100 < 2 [
       ;  hatch-tumors 1 [
-      ;    tumors-cells
+      ;    setup-tumor
       ;    rt random-float 360
       ;    fd 0.5
       ;    set age 0
@@ -1040,7 +669,7 @@ to macros-tumors-interc [macros-type tumors-type]
 
       ;if random 100 < 2 [
       ;  hatch-tumors 1 [
-      ;    tumors-cells
+      ;    setup-tumor
       ;    rt random-float 360
       ;    fd 0.5
       ;    set age 0
@@ -1073,7 +702,7 @@ end
 
 ;------------------------------------- Th-tumor interaction
 to th-tumor-interc
-  ask Th-cells [
+  ask th-cells [
     let tumh one-of tumors-here
 
     if tumh != nobody [
@@ -1349,9 +978,9 @@ to print_data_primary [cont number ]
   file-type ","
   file-type count natuks
   file-type ","
-  file-type count Th-cells
+  file-type count th-cells
   file-type ","
-  file-type count Tr-cells
+  file-type count tr-cells
   file-type "\r\n"
 end
 
@@ -1439,88 +1068,88 @@ end
 ;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 to metastasisBone
   ; Cell actions
-  mitosis-tumors tumorsb
+  mitosis-tumors tumorsB
 
-  ask neutrsb [
-    move-neutrb
-    neutrs-tumors-interc neutrsb tumorsb
+  ask neutrsB [
+    move-neutrB
+    neutrs-tumors-interc neutrsB tumorsB
     set age age + 1
     death-neutr
   ]
 
-  ask macrosb [
-    move-macrob
-    macros-tumors-interc macrosb tumorsb
+  ask macrosB [
+    move-macroB
+    macros-tumors-interc macrosB tumorsB
     set age age + 1
     death-macro
   ]
 
-  ask natuksb [
-    ;move-natuk natuksb 16 0
-    move-natuk natuksb 16 16
+  ask natuksB [
+    ;move-natuk natuksB 16 0
+    move-natuk natuksB 16 16
     set age age + 1
     death-natuk
   ]
 
   ; recruit of innate immune system cells
   let x cordinates 1 1
-  create-neutrsb neutrophils-to-recruit (ticks - tick-init-metastasis-bone) [ neutrs-cells setxy x 32 set age 0 ]
+  create-neutrsB is-cells-to-recruit (ticks - tick-init-metastasis-bone) is-cells [ setup-neutr setxy x 32 set age 0 ]
 
   ;let y random-ycor
   let y cordinates 1 -1
-  create-natuks natural-killers-to-recruit (ticks - tick-init-metastasis-bone) [ natuks-cells setxy 0 y set age 0 ]
+  create-natuks is-cells-to-recruit (ticks - tick-init-metastasis-bone) is-cells [ setup-natuk setxy 0 y set age 0 ]
 
   set x cordinates 1 1
-  create-macros macrophages-to-recruit (ticks - tick-init-metastasis-bone) [ macros-cells setxy x 0 set age 0 ]
+  create-macros is-cells-to-recruit (ticks - tick-init-metastasis-bone) is-cells [ setup-macro setxy x 0 set age 0 ]
 
 end
 
 to setupbone[a b]
   let cordx  16 * a
   let cordy  16 * b
-  create-tumorsb No.-of-initial-tumor-cells [
+  create-tumorsB No.-of-initial-tumor-cells [
     setxy cordx cordy
-    tumors-cells
+    setup-tumor
     set age 0
   ]
-  ask tumorsb [ fd 0.5 ]
+  ask tumorsB [ fd 0.5 ]
 
-  create-neutrsb No.-of-initial-neutrophils-cell [
+  create-neutrsB No.-of-initial-neutrophils-cell [
 
     let x cordinates a 1
     ;let y random-ycor
     let y cordinates b -1
     setxy x y
-    neutrs-cells
+    setup-neutr
     set age 0
   ]
 
-  create-macrosb No.-of-initial-macrophages-cells
+  create-macrosB No.-of-initial-macrophages-cells
   [
     let x cordinates a 1
     ;let y random-ycor
     let y cordinates b -1
     setxy x y
     ;setxy random-xcor random-ycor
-    macros-cells
+    setup-macro
     set age 0
   ]
 
-  create-natuksb No.-of-initial-natural-killers-cells [
+  create-natuksB No.-of-initial-natural-killers-cells [
     let x cordinates a 1
     ;let y random-ycor
     let y cordinates b -1
     setxy x y
     ;setxy random-xcor random-ycor
-    natuks-cells
+    setup-natuk
     set age 0
   ]
 
 end
 
 ;------------------------------------- neutrophils movement corresponding to bone
-to move-neutrb
-  ask neutrsb
+to move-neutrB
+  ask neutrsB
   [
     if (neut?) and (not tan1?) and (not tan2?)
     [
@@ -1530,11 +1159,11 @@ to move-neutrb
       set age age + 1
     ]
 
-    let tumh one-of tumorsb-here
+    let tumh one-of tumorsB-here
     if tumh != nobody [
       if random 100 < SuccesOfInterac-NeutTum [
 
-        ask neutrsb-here [
+        ask neutrsB-here [
           ;show ( word "neutrs="count neutrs-here)
 
           if (neut?) and (not tan2?) and (not tan1?) [
@@ -1562,18 +1191,18 @@ to move-neutrb
 end
 
 ;------------------------------------- macrophages movement corresponding to bone
-to move-macrob
-  ask macrosb [
+to move-macroB
+  ask macrosB [
     if (macr?) and (not tam1?) and (not tam2?) [
       ;facexy 16 0 ;one-of tumors
       facexy 16 16 ;one-of tumors
       fd 0.5
       set age age + 1
     ]
-    let tumh one-of tumorsb-here
+    let tumh one-of tumorsB-here
     if tumh != nobody [
       if random 100 < SuccesOfInterac-MacrTum [
-        ask macrosb-here [
+        ask macrosB-here [
           if (macr?) and (not tam2?) and (not tam1?) [
             ifelse random 100 < Change-to-tam1-or-tam2 [  ; probability of change a tan1 or tan2
               set tam1? true
@@ -1604,13 +1233,13 @@ to print_data_bone [cont number]
   file-type "time"
   file-type cont
   file-type ","
-  file-type count tumorsb
+  file-type count tumorsB
   file-type ","
-  file-type count neutrsb
+  file-type count neutrsB
   file-type ","
-  file-type count macrosb
+  file-type count macrosB
   file-type ","
-  file-type count natuksb
+  file-type count natuksB
   file-type "\r\n"
 end
 
@@ -1648,13 +1277,13 @@ to metastasisLung
 
   ; recruit of innate immune system cells
   let x cordinates -1 1
-  create-neutrsLg neutrophils-to-recruit (ticks - tick-init-metastasis-lung) [ neutrs-cells setxy x -32 set age 0 ]
+  create-neutrsLg is-cells-to-recruit (ticks - tick-init-metastasis-lung) is-cells [ setup-neutr setxy x -32 set age 0 ]
 
   let y cordinates -1 -1
-  create-natuksLg natural-killers-to-recruit (ticks - tick-init-metastasis-lung) [ natuks-cells setxy 0 y set age 0 ]
+  create-natuksLg is-cells-to-recruit (ticks - tick-init-metastasis-lung) is-cells [ setup-natuk setxy 0 y set age 0 ]
 
   set x cordinates -1 1
-  create-macrosLg macrophages-to-recruit (ticks - tick-init-metastasis-lung) [ macros-cells setxy x 0 set age 0 ]
+  create-macrosLg is-cells-to-recruit (ticks - tick-init-metastasis-lung) is-cells [ setup-macro setxy x 0 set age 0 ]
 
 end
 
@@ -1663,7 +1292,7 @@ to setuplung[a b]
   let cordy  16 * b
   create-tumorsLg No.-of-initial-tumor-cells [
     setxy cordx cordy
-    tumors-cells
+    setup-tumor
     set age 0
   ]
   ask tumorsLg [ fd 0.5 ]
@@ -1674,7 +1303,7 @@ to setuplung[a b]
     let y cordinates b -1
 
     setxy x y
-    neutrs-cells
+    setup-neutr
     set age 0
   ]
 
@@ -1684,7 +1313,7 @@ to setuplung[a b]
     let y cordinates b -1
     setxy x y
     ;setxy random-xcor random-ycor
-    macros-cells
+    setup-macro
     set age 0
   ]
 
@@ -1693,7 +1322,7 @@ to setuplung[a b]
     let y cordinates b -1
     setxy x y
     ;setxy random-xcor random-ycor
-    natuks-cells
+    setup-natuk
     set age 0
   ]
 
@@ -1811,14 +1440,14 @@ to metastasisLiver
 
   ; recruit of innate immune system cells
   let x cordinates 1 1
-  create-neutrsLv neutrophils-to-recruit (ticks - tick-init-metastasis-liver) [ neutrs-cells setxy x -32 set age 0 ]
+  create-neutrsLv is-cells-to-recruit (ticks - tick-init-metastasis-liver) is-cells [ setup-neutr setxy x -32 set age 0 ]
 
 
   let y cordinates -1 -1
-  create-natuksLv natural-killers-to-recruit (ticks - tick-init-metastasis-liver) [ natuks-cells setxy 0 y set age 0 ]
+  create-natuksLv is-cells-to-recruit (ticks - tick-init-metastasis-liver) is-cells [ setup-natuk setxy 0 y set age 0 ]
 
   set x cordinates 1 1
-  create-macrosLv macrophages-to-recruit (ticks - tick-init-metastasis-liver) [ macros-cells setxy x 0 set age 0 ]
+  create-macrosLv is-cells-to-recruit (ticks - tick-init-metastasis-liver) is-cells [ setup-macro setxy x 0 set age 0 ]
 
 end
 
@@ -1827,7 +1456,7 @@ to setupliver[a b]
   let cordy  16 * b
   create-tumorsLv No.-of-initial-tumor-cells [
     setxy cordx cordy
-    tumors-cells
+    setup-tumor
     set age 0
   ]
   ask tumorsLv [ fd 0.5 ]
@@ -1838,7 +1467,7 @@ to setupliver[a b]
     let y cordinates b -1
 
     setxy x y
-    neutrs-cells
+    setup-neutr
     set age 0
   ]
 
@@ -1848,7 +1477,7 @@ to setupliver[a b]
     let y cordinates b -1
     setxy x y
     ;setxy random-xcor random-ycor
-    macros-cells
+    setup-macro
     set age 0
   ]
 
@@ -1857,7 +1486,7 @@ to setupliver[a b]
     let y cordinates b -1
     setxy x y
     ;setxy random-xcor random-ycor
-    natuks-cells
+    setup-natuk
     set age 0
   ]
 
@@ -2263,12 +1892,12 @@ true
 true
 "" ""
 PENS
-"tumor-cells" 1.0 0 -14985354 true "" "plot count tumorsb"
+"tumor-cells" 1.0 0 -14985354 true "" "plot count tumorsB"
 "tan1-cells" 1.0 0 -10146808 true "" "plot tan1"
 "tan2-cells" 1.0 0 -3889007 true "" "plot tan2"
 "tam1-cells" 1.0 0 -15040220 true "" "plot tam1"
 "tam2-cells" 1.0 0 -8330359 true "" "plot tam2"
-"natural- killers" 1.0 0 -5298144 true "" "plot  count natuksb"
+"natural- killers" 1.0 0 -5298144 true "" "plot  count natuksB"
 
 PLOT
 865
@@ -2322,7 +1951,7 @@ MONITOR
 121
 537
 No. Th cells
-count Th-cells
+count th-cells
 17
 1
 11
@@ -2333,7 +1962,7 @@ MONITOR
 122
 596
 No. Tr cells
-count Tr-cells
+count tr-cells
 17
 1
 11

@@ -1,0 +1,169 @@
+to-report logistic [increase x x0]
+  let a increase - 1.0
+  let k 9                                ; Tasa de crecimiento
+  
+  report 1.0 + ( a / (1.0 + (e ^ (- k * (x - x0)))) )
+end
+
+to-report calc-logistic-proportion [increase ticks-spread x0]
+  set i 0
+  let d_x 1.0 / (ticks-spread - 1.0)
+  let v_result [1]
+  
+  repeat (ticks-spread - 1) [
+    set v_result lput ( logistic increase ((i + 1) * d_x) x0 / logistic increase ((i) * d_x) x0) v_result
+    set i i + 1
+  ]
+  
+  report max v_result - 1.0
+end
+
+to-report gauss-aproximation [x a b]
+  let c 0.19
+  
+  let result a * (e ^ ( - ((x - b) ^ 2.0) / (2.0 * (c ^ 2.0) ) ))
+  
+  report result
+end
+
+; Tumor recruitment
+to-report tumor-cells-to-recruit [ticks-spreading current-cells]
+  let d_x 1.0 / (ticks-tumor-spread - 1.0)  ; ticks-tumor-spread - Ticks totales para llegar al maximo valor de la curva sigmoide.  d_x - Diferencial de x
+  let x (ticks-spreading * d_x)             ; ticks-spreading - Ticks de vida del tumor.
+  
+  let result int( current-cells * gauss-aproximation x a-gauss-tumor x0-sigmoide-tumor)  ; Aproximacion de la funcion de gauss usando las variables, x, a, y x0 (punto de inflexion)
+  
+  if result = 0 and random 100 < 50 [
+    set result 1
+  ]
+  
+  report result
+end
+
+; Immune system recruitment
+to-report is-cells-to-recruit [ticks-spreading current-cells]
+  ;report int(gauss recruit-neutrophils x)
+  let d_x 1.0 / (ticks-is-spread - 1.0)  ; ticks-tumor-spread - Ticks totales para llegar al maximo valor de la curva sigmoide.  d_x - Diferencial de x
+  let x (ticks-spreading * d_x)          ; ticks-spreading - Ticks de vida del sistema inmune.
+  
+  let result int( current-cells * gauss-aproximation x a-gauss-is x0-sigmoide-is)  ; Aproximacion de la funcion de gauss usando las variables, x, a, y x0 (punto de inflexion)
+  set result result / 2.6
+  
+  if result = 0 and random 100 < 33 [
+    set result 1
+  ]
+  
+  report result
+end
+
+; Read initial values of force from input file
+to set-initial-values-from-file[filename]
+  ;open file wich contains input values
+  file-open filename
+  
+  set data csv:from-row file-read-line
+  set No.-of-initial-tumor-cells item 1 data
+  
+  set data csv:from-row file-read-line
+  set No.-of-initial-neutrophils-cell item 1 data
+  
+  set data csv:from-row file-read-line
+  set No.-of-initial-macrophages-cells item 1 data
+  
+  set data csv:from-row file-read-line
+  set No.-of-initial-natural-killers-cells item 1 data
+  
+  
+  set data csv:from-row file-read-line
+  set recruit-natural-killers item 1 data
+  
+  set data csv:from-row file-read-line
+  set SAttackSuccesByNk item 1 data
+  
+  
+  set data csv:from-row file-read-line
+  set recruit-macrophages item 1 data
+  
+  set data csv:from-row file-read-line
+  set SuccesOfInterac-MacrTum item 1 data
+  
+  set data csv:from-row file-read-line
+  set SuccesOf-tam1 item 1 data
+  set SuccesOf-tam2 100 - SuccesOf-tam1
+  
+  set data csv:from-row file-read-line
+  set Change-to-tam1-or-tam2 item 1 data
+  
+  set data csv:from-row file-read-line
+  set No-of-activating-tumor-cells-by-tam2 item 1 data
+  
+  set data csv:from-row file-read-line
+  set No-of-desactivating-tumor-cells-by-tam1 item 1 data
+  
+  
+  set data csv:from-row file-read-line
+  set recruit-neutrophils item 1 data
+  
+  set data csv:from-row file-read-line
+  set SuccesOfInterac-NeutTum item 1 data
+  
+  set data csv:from-row file-read-line
+  set SuccesOf-tan1 item 1 data
+  set SuccesOf-tan2 100 - SuccesOf-tan1
+  
+  set data csv:from-row file-read-line
+  set Change-to-tan1-or-tan2 item 1 data
+  
+  set data csv:from-row file-read-line
+  set No-of-activating-tumor-cells-by-tan2 item 1 data
+  
+  set data csv:from-row file-read-line
+  set No-of-desactivating-tumor-cells-by-tan1 item 1 data
+  
+  
+  set data csv:from-row file-read-line
+  set max-age-tam1 item 1 data
+  
+  set data csv:from-row file-read-line
+  set max-age-tam2 item 1 data
+  
+  set data csv:from-row file-read-line
+  set max-age-tan1 item 1 data
+  
+  set data csv:from-row file-read-line
+  set max-age-tan2 item 1 data
+  
+  set data csv:from-row file-read-line
+  set max-age-nk item 1 data
+  
+  
+  set data csv:from-row file-read-line
+  set max-tumors item 1 data
+  
+  set data csv:from-row file-read-line
+  set No.ticks item 1 data
+  
+  
+  set data csv:from-row file-read-line
+  set No.-of-initial-treg-cells item 1 data
+  
+  set data csv:from-row file-read-line
+  set No.-of-initial-helper-cells item 1 data
+  
+  set data csv:from-row file-read-line
+  set SuccesOfInterac-Th-Tum item 1 data
+  
+  set data csv:from-row file-read-line
+  set Change-thcells-to-thcells- item 1 data
+  set Change-thcells-to-Cd8 100 - Change-thcells-to-thcells-
+  
+  set data csv:from-row file-read-line
+  set AttackSuccesByCd8 item 1 data
+  
+  
+  set data csv:from-row file-read-line
+  set x0-sigmoide-is (item 1 data) * 0.01
+  
+  set data csv:from-row file-read-line
+  set x0-sigmoide-tumor (item 1 data) * 0.01
+end
