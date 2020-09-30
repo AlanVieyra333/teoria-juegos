@@ -56,11 +56,14 @@ to setup-cell [color-cell]
   if not graficos [
     set hidden? true
   ]
+  rt random-float 360
+  set age 0
 end
 
 ; Tumor cells
 to setup-tumor
   setup-cell blue
+  fd 0.5
 end
 
 ; Neutrophil cells

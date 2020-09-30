@@ -61,11 +61,21 @@ void gen(level_t is_level, level_t cancer_level) {
   // }
   fprintf(f, "No.ticks,%d\n", TICKS);
 
+  fprintf(f, "No.-of-initial-t-cells,%d\n", get_rand_interval(is_level, intervals));
+  fprintf(f, "recruit-t-cells,%d\n", get_rand_interval(is_level, intervals));
+  fprintf(f, "AttackSuccesByTCells,%d\n", get_rand_interval(is_level, intervals));
+  fprintf(f, "max-age-t-cell,%d\n", get_rand_interval(is_level, age_intervals));
+
   fprintf(f, "No.-of-initial-treg-cells,%d\n", get_rand_interval(is_level, intervals));
-  fprintf(f, "No.-of-initial-helper-cells,%d\n", get_rand_interval(is_level, intervals));
-  fprintf(f, "SuccesOfInterac-Th-Tum,%d\n", get_rand_interval(is_level, intervals));
-  fprintf(f, "Change-thcells-to-thcells-,%d\n", get_rand_interval(is_level, intervals));
-  fprintf(f, "AttackSuccesByCd8,%d\n", get_rand_interval(is_level, intervals));
+  fprintf(f, "recruit-treg-cells,%d\n", get_rand_interval(is_level, intervals));
+  fprintf(f, "SuccesOfInterac-tregCells-tCells,%d\n", get_rand_interval(is_level, intervals));
+  fprintf(f, "SuccesOfInterac-tregCells-thCells,%d\n", get_rand_interval(is_level, intervals));
+  fprintf(f, "max-age-treg-cell,%d\n", get_rand_interval(is_level, age_intervals));
+
+  fprintf(f, "No.-of-initial-th-cells,%d\n", get_rand_interval(is_level, intervals));
+  fprintf(f, "recruit-th-cells,%d\n", get_rand_interval(is_level, intervals));
+  fprintf(f, "SuccesOfInterac-thCells-tCells,%d\n", get_rand_interval(is_level, intervals));
+  fprintf(f, "max-age-th-cell,%d\n", get_rand_interval(is_level, age_intervals));
 
   // fprintf(f, "x0-sigmoide-is,%d\n", rand() % 31 + ((is_level - 2) * - 1) * 20 + 15);
   // fprintf(f, "x0-sigmoide-tumor,%d\n", rand() % 31 + ((cancer_level - 2) * - 1) * 20 + 15);

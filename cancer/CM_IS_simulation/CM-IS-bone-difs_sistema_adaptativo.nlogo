@@ -54,14 +54,22 @@ globals [
   max-age-tan1
   max-age-tan2
   max-age-nk
-
+  ; T cells
+  No.-of-initial-t-cells
+  recruit-t-cells
+  AttackSuccesByTCells
+  max-age-t-cell
+  ; Treg cells
   No.-of-initial-treg-cells
-  No.-of-initial-helper-cells
-  SuccesOfInterac-Th-Tum
-  Change-thcells-to-thcells-
-  Change-thcells-to-Cd8
-  AttackSuccesByCd8
-  ;No.-of-initial-cd8-cells
+  recruit-treg-cells
+  SuccesOfInterac-tregCells-tCells
+  SuccesOfInterac-tregCells-thCells
+  max-age-treg-cell
+  ; Th cells
+  No.-of-initial-th-cells
+  recruit-th-cells
+  SuccesOfInterac-thCells-tCells
+  max-age-th-cell
   ;------------------------------------ new variables
   filename-template
   total-files
@@ -105,7 +113,7 @@ to clear-vars
   set edad 0
   set l 0
   set prob 0
-  set min-tumors 0
+  set min-tumors 2
   set Q 0
   set P 0
   set counter 0
@@ -138,12 +146,23 @@ to clear-vars
   set max-age-tan1 0
   set max-age-tan2 0
   set max-age-nk 0
+  ; T cells
+  set No.-of-initial-t-cells 0
+  set recruit-t-cells 0
+  set AttackSuccesByTCells 0
+  set max-age-t-cell 0
+  ; Treg cells
   set No.-of-initial-treg-cells 0
-  set No.-of-initial-helper-cells 0
-  set SuccesOfInterac-Th-Tum 0
-  set Change-thcells-to-thcells- 0
-  set Change-thcells-to-Cd8 0
-  set AttackSuccesByCd8 0
+  set recruit-treg-cells 0
+  set SuccesOfInterac-tregCells-tCells 0
+  set SuccesOfInterac-tregCells-thCells 0
+  set max-age-treg-cell 0
+  ; Th cells
+  set No.-of-initial-th-cells 0
+  set recruit-th-cells 0
+  set SuccesOfInterac-thCells-tCells 0
+  set max-age-th-cell 0
+  ; ------------------------
   set can_there_be_metastasis false
   set are_there_metastasis_bone false
   set are_there_metastasis_lung false
@@ -175,54 +194,17 @@ end
 
 to init
   clear-vars
-  clear-ticks
   clear-turtles
   clear-patches
   clear-drawing
   clear-all-plots
   clear-output
-
+  clear-ticks
+  reset-ticks
   file-close-all
 
   ;read of input from files
   set-initial-values-from-file (word filename-template file-num ".csv")
-
-  set increase-is 2                ; Incremento del sist. inmune maximo posible.
-  set increase-tumor 2             ; Incremento del tumor maximo posible.
-  set ticks-is-spread 12     ; Ticks necesarios para llegar al valor maximo de la funcion sigmoide para el sist. inmune.
-  set ticks-tumor-spread 12  ; Ticks necesarios para llegar al valor maximo de la funcion sigmoide para el tumor.
-  set a-gauss-is (calc-logistic-proportion increase-is ticks-is-spread x0-sigmoide-is)              ; Cálculo de 'a' de la funcion de gauss para el sist. inmune.
-  set a-gauss-tumor (calc-logistic-proportion increase-tumor ticks-tumor-spread x0-sigmoide-tumor)  ; Cálculo de 'a' de la funcion de gauss para el tumor.
-
-  ;initial conditions of IS and CC cells
-  ; -16 0 are the coordinates of the center of the primary tumor world
-  setup1 -16 16 -1 1
-
-  ; coloring of four parts of the world
-  if graficos [
-    let p1 -32
-    repeat 33 [
-      let p2 0
-      repeat 33 [
-        let xaux -1 * p2
-        let yaux -1 * p1
-
-        ;corresponding to primary tumor
-        ask patch p1 p2 [set pcolor gray]
-        ;corresponding to bone
-        ask patch p2 yaux [set pcolor orange + 2]
-        ;corresponding to liver
-        ask patch p2 p1 [set pcolor brown]
-        ;corresponding to lung
-        ask patch p1 xaux [set pcolor pink]
-
-        set p2 p2 + 1
-      ]
-
-      set p1 p1 + 1
-    ]
-  ]
-  reset-ticks
 
   ;create the files corresponding to each organ
   ;file number is to distinguish the files of each simulation
@@ -231,114 +213,74 @@ to init
   print_file "log/bone/bone tumor" file_number
   print_file_hamilton
   ;write initial data to files
-  set counter 0
   print_data_primary counter file_number
   print_data_bone counter file_number
+
   ;initialize variables
-  set hamilton 0
-  set HamiltonTu 0
-  set HamiltonIS 0
-end
+  set increase-is 2                ; Incremento del sist. inmune maximo posible.
+  set increase-tumor 2             ; Incremento del tumor maximo posible.
+  set ticks-is-spread 12     ; Ticks necesarios para llegar al valor maximo de la funcion sigmoide para el sist. inmune.
+  set ticks-tumor-spread 12  ; Ticks necesarios para llegar al valor maximo de la funcion sigmoide para el tumor.
+  set a-gauss-is (calc-logistic-proportion increase-is ticks-is-spread x0-sigmoide-is)              ; Cálculo de 'a' de la funcion de gauss para el sist. inmune.
+  set a-gauss-tumor (calc-logistic-proportion increase-tumor ticks-tumor-spread x0-sigmoide-tumor)  ; Cálculo de 'a' de la funcion de gauss para el tumor.
 
-; Init metastasis bone
-to setup_metastasis_bone
-  if can_there_be_metastasis = true [
-    set are_there_metastasis_bone are_there_metastasis_site "bone"
+  ;initial conditions of IS and CC cells
+  setup-primary -1 1
 
-    if are_there_metastasis_bone = true [
-      set tick-init-metastasis-bone ticks
-      setupbone 1 1
-    ]
+  ; coloring of four parts of the world
+  if graficos [
+    ask patches with [pxcor <= 0 and pycor >= 0] [set pcolor gray]
+    ask patches with [pxcor > 0 and pycor >= 0] [set pcolor orange + 2]
+    ask patches with [pxcor <= 0 and pycor < 0] [set pcolor brown + 1]
+    ask patches with [pxcor > 0 and pycor < 0] [set pcolor pink]
   ]
-end
 
-; Init metastasis lung
-to setup_metastasis_lung
-  if can_there_be_metastasis = true [
-    set are_there_metastasis_lung are_there_metastasis_site "lung"
-
-    if are_there_metastasis_lung = true [
-      set tick-init-metastasis-lung ticks
-      setuplung -1 -1
-    ]
-  ]
-end
-
-; Init metastasis liver
-to setup_metastasis_liver
-  if can_there_be_metastasis = true [
-    set are_there_metastasis_liver are_there_metastasis_site "liver"
-
-    if are_there_metastasis_liver = true [
-      set tick-init-metastasis-liver ticks
-      setupliver 1 -1
-    ]
-  ]
 end
 
 ; set up  initial conditions of IS and CC cells
 ; a, b tags of sections
 ;cordx cordy are the cordinates of the center of the corresponding world
-to setup1[cordx cordy a b]
-  set  min-tumors 2
+to setup-primary [a b]
+  let cordx  16 * a
+  let cordy  16 * b
+
   create-tumors No.-of-initial-tumor-cells [
     setxy cordx cordy
     setup-tumor
-    set age 0
   ]
-  ask tumors [ fd 0.5 ]
 
-  create-neutrs No.-of-initial-neutrophils-cell
-  [
+  create-neutrs No.-of-initial-neutrophils-cell [
     let x cordinates a 1
-    ;let y random-ycor
     let y cordinates b -1
-
     setxy x y
+
     setup-neutr
-    set age 0
   ]
 
-  create-macros No.-of-initial-macrophages-cells
-  [
+  create-macros No.-of-initial-macrophages-cells [
     let x cordinates a 1
-    ;let y random-ycor
     let y cordinates b -1
     setxy x y
 
     setup-macro
-    set age 0
   ]
+
   create-natuks No.-of-initial-natural-killers-cells [
     let x cordinates a 1
     let y cordinates b -1
     setxy x y
 
     setup-natuk
-    set age 0
   ]
 
-  ;  create-th-cells No.-of-initial-helper-cells [
-  ;    let x cordinates a 1
-  ;    ;let y random-ycor
-  ;    let y cordinates b -1
-  ;    setxy x y
-  ;
-  ;    setup-th-cell
-  ;    set age 0
-  ;  ]
-  ;
-  ;  create-tr-cells No.-of-initial-treg-cells [
-  ;    let x cordinates a 1
-  ;    ;let y random-ycor
-  ;    let y cordinates b -1
-  ;    setxy x y
-  ;
-  ;    setup-tr-cell
-  ;    set age 0
-  ;  ]
-end
+  setup-t-cells a b
+  setup-treg-cells a b
+  setup-th-cells a b
 
+  set tumor-cells count tumors + tan2 + tam2
+  set is-cells count natuks + count neutrs - tan2 + count macros - tam2
+  hamilton-1
+end
 
 ;cordinates correspondig to a b cuadrant
 ; crd=1 if its about x
@@ -346,13 +288,12 @@ end
 ; sign its de sign of cordinate 1 or -1
 to-report cordinates[sign crd]
   let cord 0
-  ifelse crd = 1
-  [
+  ifelse crd = 1 [
     set cord random-xcor
-  ]
-  [
+  ] [
     set cord random-ycor
   ]
+
   let aux cord * sign
 
   if aux < 0 [ set cord -1 * cord]
@@ -410,29 +351,37 @@ to go
 
   move-natuk natuks -16 16
 
-  ;move-help th-cells -16 0
-  ;th-tumor-interc
+  ask treg-cells [
+    move-treg-cell
+    attack-treg-cell
+    death-treg-cell
+  ]
+
+  ask th-cells [
+    move-th-cell
+    attack-th-cell
+    death-th-cell
+  ]
 
   let x cordinates -1 1
   let y cordinates 1 -1
-  create-natuks is-cells-to-recruit ticks is-cells [ setup-natuk setxy x y set age 0 ]
+  create-natuks is-cells-to-recruit ticks is-cells [ setup-natuk setxy x y ]
 
   ; recruit of innate immune system cells
   set x cordinates -1 1
   set y cordinates 1 -1
-  create-neutrs is-cells-to-recruit ticks is-cells [ setup-neutr setxy x y set age 0 ]
+  create-neutrs is-cells-to-recruit ticks is-cells [ setup-neutr setxy x y ]
 
   set x cordinates -1 1
   set y cordinates 1 -1
-  create-macros is-cells-to-recruit ticks is-cells [ setup-macro setxy x y set age 0 ]
-
-  hamilton-1
+  create-macros is-cells-to-recruit ticks is-cells [ setup-macro setxy x y ]
 
   ;METASTASIS
   ;go-metastasis
 
   set tumor-cells count tumors + tan2 + tam2
   set is-cells count natuks + count neutrs - tan2 + count macros - tam2
+  hamilton-1
 
   tick
 
@@ -466,19 +415,6 @@ to go-metastasis
   ]
 end
 
-;___________________________________ output files
-;export all deafault netlogo output files
-to output_files
-  export-view (word "log/primary_tumor/modelo_cancer" file_number ".png")
-  export-output (word "log/primary_tumor/salida_modelo_cancer" file_number ".csv")
-  export-world (word "log/primary_tumor/modelo_hamilton" file_number ".csv")
-  export-all-plots (word "log/primary_tumor/primary tumor graphs " file_number ".csv")
-  export-plot "Primary tumor cells" (word "log/primary_tumor/primary_tumor_graphs" file_number ".csv")
-  export-plot "Bone tumor cells" (word "log/bone/primary_tumor_graphs" file_number ".csv")
-  export-plot "Lung tumor cells" (word "log/lung/primary_tumor_graphs" file_number ".csv")
-  export-plot "Liver tumor cells" (word "log/liver/primary_tumor_graphs" file_number ".csv")
-end
-
 ;------------------------------------- mitosis-tumors
 to mitosis-tumors [tumors-type]
   if (not stop-replication?) [
@@ -495,36 +431,32 @@ to mitosis-tumors [tumors-type]
         fd 0.5
         set age 0
       ]
+    ] is-tumorB? one-of tumors-type [
+      create-tumorsB tumor-cells-to-recruit ticks count tumorsB [
+        setxy 16 16
+        setup-tumor
+        rt random-float 360
+        fd 0.5
+        set age 0
       ]
-      is-tumorB? one-of tumors-type [
-        create-tumorsB tumor-cells-to-recruit ticks count tumorsB [
-          setxy 16 16
-          setup-tumor
-          rt random-float 360
-          fd 0.5
-          set age 0
-        ]
+    ] is-tumorLg? one-of tumors-type [
+      create-tumorsLg tumor-cells-to-recruit ticks count tumorsLg [
+        setxy -16 -16
+        setup-tumor
+        rt random-float 360
+        fd 0.5
+        set age 0
       ]
-      is-tumorLg? one-of tumors-type [
-        create-tumorsLg tumor-cells-to-recruit ticks count tumorsLg [
-          setxy -16 -16
-          setup-tumor
-          rt random-float 360
-          fd 0.5
-          set age 0
-        ]
+    ] is-tumorLv? one-of tumors-type [
+      create-tumorsLv tumor-cells-to-recruit ticks count tumorsLv [
+        setxy 16 -16
+        setup-tumor
+        rt random-float 360
+        fd 0.5
+        set age 0
       ]
-      is-tumorLv? one-of tumors-type [
-        create-tumorsLv tumor-cells-to-recruit ticks count tumorsLv [
-          setxy 16 -16
-          setup-tumor
-          rt random-float 360
-          fd 0.5
-          set age 0
-        ]
-      ]
-    )
-  ]
+    ])
+ ]
 end
 
 ;------------------------------------- natural killers movement
@@ -682,45 +614,8 @@ to macros-tumors-interc [macros-type tumors-type]
   ]
 end
 
-;-------------------------------------helpers movement
-to move-help[helpstype x y]
-  ask helpstype [
-    ;facexy x y ;one-of tumors
-    ;fd 0.5
-    let tumh one-of tumors
-    if tumh != nobody [
-      move-to one-of tumors
-    ]
-
-    set age age + 1
-    ;let tumh one-of tumors-here
-    if random 100 < SuccesOfInterac-Th-Tum [
-      ;aqui ocurre la interaciion de las celulas Th con el tumor
-    ]
-  ]
-end
-
-;------------------------------------- Th-tumor interaction
-to th-tumor-interc
-  ask th-cells [
-    let tumh one-of tumors-here
-
-    if tumh != nobody [
-      if random 100 < Change-thcells-to-thcells-
-      [
-
-      ]
-
-      if random 100 < Change-thcells-to-Cd8
-      [
-
-      ]
-    ]
-  ]
-end
-
 to attack [ prey max-age prob-kill]
-  if (must-die? max-age prob-kill)[
+  if (must-die? max-age prob-kill) [
     ask prey [ die ]
   ]
 end
@@ -764,239 +659,6 @@ to-report must-die? [ maxage prob-kill]
 
   report false
 end
-
-
-;Isig hamilton
-to hamilton-1
-  set hamilton 0
-  set HamiltonIS 0
-  set HamiltonTu 0
-  let x vector-x
-  let W matrix-W
-  let sum1 0
-  let wij 0
-  let xj 0
-  let xi 0
-  let sum2 0
-
-  set i  0
-  repeat l
-  [
-    set j 0
-    set xi item i x
-
-    repeat l
-    [
-      set xj item j x
-      set wij matrix:get W i j
-
-      ifelse abs(xi) > abs(xj) [
-        set sum1 wij * xi * abs(xj)
-      ] [
-        set sum1 wij * abs(xi) * xj
-      ]
-      ;show(word "wij xj xi=" sum1)
-
-
-      ifelse sum1 >= 0 [
-        set HamiltonIS HamiltonIS - 0.5 * sum1
-      ] [
-        set HamiltonTu HamiltonTu - 0.5 * sum1
-      ]
-
-      set j j + 1
-    ]
-
-    set sum2 item i x
-    ifelse sum2 >= 0 [
-      set HamiltonIS HamiltonIS - sum2
-    ] [
-      set HamiltonTu HamiltonTu - sum2
-    ]
-
-    set i i + 1
-  ]
-
-
-  ;show (word "hamilton=" hamilton)
-  set hamilton HamiltonTu + HamiltonIS
-  ;show (word "hamilton" hamilton)
-  print_data_hamilton counter
-end
-
-to-report vector-x
-  let x-vector []
-
-  let x1 -1 * count tumors
-  set x-vector lput x1 x-vector
-  let x2 1 * count neutrs - tan1 - tan2
-  set x-vector lput x2 x-vector
-  let x3 1 * tan1
-  set x-vector lput x3 x-vector
-  let x4 -1 * tan2
-  set x-vector lput x4 x-vector
-  let x5 1 * count macros - tam1 - tam2
-  set x-vector lput x5 x-vector
-  let x6 1 * tam1
-  set x-vector lput x6 x-vector
-  let x7 -1 * tam2
-  set x-vector lput x7 x-vector
-  let x8 1 * count natuks
-  set x-vector lput x8 x-vector
-
-  report x-vector
-end
-
-;-------------------------------------------------Matrix W
-to-report matrix-W
-  ; Read matrix Q from file
-  let Q-list csv:from-file "matriz_q.csv"
-  set Q matrix:from-row-list Q-list
-
-  set i 1
-  set l 8
-
-  set P probabilities-p
-  ;create an empty list
-  let Waux []
-  set i 0
-  repeat l
-  [
-    ; aqui se forman los renglones de la matriz W
-    let Aj []
-    set j 0
-    repeat l
-    [
-      ;get aij element of matrix W
-      set aij elemento-aij i j
-      ; add aij to Aj
-      set Aj lput aij Aj
-      set j j + 1
-    ]
-    ;create row list of matrix W
-    set Waux lput Aj Waux
-    set i i + 1
-  ]
-  ;create the matrix W
-  let MatrixW matrix:from-row-list Waux
-  ;show (word "HamiltonTu= ")
-  ; print matrix:pretty-print-text MatrixW
-
-  report MatrixW
-end
-
-
-; calculate the  ij element of  W matrix
-to-report elemento-aij[ i1 j1]
-  let aux1 matrix:get Q i1 j1
-  let aux2 matrix:get P i1 j1
-
-  report aux1 * aux2
-end
-
-
-; probabilities matrix
-to-report probabilities-p
-  let p12 SuccesOfInterac-NeutTum * 0.01  ; Probabilidad de intereaccion entre neutrofilos y el tumor.
-
-  let p23 Change-to-tan1-or-tan2 * 0.01   ; Probabilidad de que cambie un neutrofilo a tan1.
-  let p24 1 - p23                         ; Probabilidad de que cambie un neutrofilo a tan2.
-
-  let p13 p23 * SuccesOf-tan1 * 0.01      ; Probabilidad de exito de ataque de tan1.
-  let p14 1 - p13                         ; Probabilidad de exito de ataque de tan2.
-
-  let p15 SuccesOfInterac-MacrTum * 0.01  ; Probabilidad de intereaccion entre macrofagos y el tumor.
-
-  let p56 Change-to-tam1-or-tam2 * 0.01   ; Probabilidad de que cambie un macrofago a tam1.
-  let p57 1 - p56                         ; Probabilidad de que cambie un macrofago a tam2.
-
-  let p16 p56 * SuccesOf-tam1 * 0.01      ; Probabilidad de exito de ataque de tam1.
-  let p17 1 - p16                         ; Probabilidad de exito de ataque de tam2.
-
-  let p18 SAttackSuccesByNk * 0.01        ; Probabilidad de exito de ataque de los natural killers.
-
-  let p-list (list
-    (list 0.0 p12 p13 p14 p15 p16 p17 p18)
-    (list p12 0.0 p23 p24 0.0 0.0 0.0 0.0)
-    (list p13 p23 0.0 0.5 0.0 0.0 0.0 0.0)
-    (list p14 p24 0.5 0.0 0.0 0.0 0.0 0.0)
-    (list p15 0.0 0.0 0.0 0.0 p56 p57 0.0)
-    (list p16 0.0 0.0 0.0 p56 0.0 0.5 0.0)
-    (list p17 0.0 0.0 0.0 p57 0.5 0.0 0.0)
-    (list p18 0.0 0.0 0.0 0.0 0.0 0.0 0.0)
-  )
-
-  let p-matrix matrix:from-column-list p-list
-  ;print matrix:pretty-print-text p-matrix
-
-  report p-matrix
-end
-
-
-;-------------------------------print output files
-to print_file [string number]
-  file-open (word string number ".csv")
-  file-type " "
-  file-type ","
-  file-type "Num of tumor cells"
-  file-type ","
-  file-type "Num of neutrophils"
-  file-type ","
-  file-type "Num of macrophages cells "
-  file-type ","
-  file-type "Num of natural killers cells "
-  file-type ","
-  file-type "Num of th cells "
-  file-type ","
-  file-type "Num of treg cells "
-  file-type"\r\n"
-
-end
-
-to print_file_hamilton
-  file-open (word "log/primary_tumor/Hamilton" file_number ".csv")
-  file-type " "
-  file-type ","
-  file-type "HamiltonTu"
-  file-type ","
-  file-type "HamiltonIS"
-  file-type ","
-  file-type "hamilton"
-  file-type"\r\n"
-end
-
-to print_data_primary [cont number ]
-  file-open (word "log/primary_tumor/primary tumor" number ".csv")
-  file-type "time"
-  file-type cont
-  file-type ","
-  file-type count tumors
-  file-type ","
-  file-type count neutrs
-  file-type ","
-  file-type count macros
-  file-type ","
-  file-type count natuks
-  file-type ","
-  file-type count th-cells
-  file-type ","
-  file-type count tr-cells
-  file-type "\r\n"
-end
-
-to print_data_hamilton [cont]
-  file-open (word "log/primary_tumor/Hamilton" file_number ".csv")
-  file-type "time"
-  file-type cont
-  file-type ","
-  file-type HamiltonTu
-  file-type ","
-  file-type  HamiltonIS
-  file-type ","
-  file-type  hamilton
-  file-type"\r\n"
-end
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;here decide if metastasis occurs
@@ -1061,6 +723,42 @@ to-report are_there_metastasis_site [metastasis_site]
 end
 
 
+; Init metastasis bone
+to setup_metastasis_bone
+  if can_there_be_metastasis = true [
+    set are_there_metastasis_bone are_there_metastasis_site "bone"
+
+    if are_there_metastasis_bone = true [
+      set tick-init-metastasis-bone ticks
+      setupbone 1 1
+    ]
+  ]
+end
+
+; Init metastasis lung
+to setup_metastasis_lung
+  if can_there_be_metastasis = true [
+    set are_there_metastasis_lung are_there_metastasis_site "lung"
+
+    if are_there_metastasis_lung = true [
+      set tick-init-metastasis-lung ticks
+      setuplung -1 -1
+    ]
+  ]
+end
+
+; Init metastasis liver
+to setup_metastasis_liver
+  if can_there_be_metastasis = true [
+    set are_there_metastasis_liver are_there_metastasis_site "liver"
+
+    if are_there_metastasis_liver = true [
+      set tick-init-metastasis-liver ticks
+      setupliver 1 -1
+    ]
+  ]
+end
+
 ;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 ;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 ;Bone
@@ -1110,9 +808,7 @@ to setupbone[a b]
   create-tumorsB No.-of-initial-tumor-cells [
     setxy cordx cordy
     setup-tumor
-    set age 0
   ]
-  ask tumorsB [ fd 0.5 ]
 
   create-neutrsB No.-of-initial-neutrophils-cell [
 
@@ -1121,7 +817,6 @@ to setupbone[a b]
     let y cordinates b -1
     setxy x y
     setup-neutr
-    set age 0
   ]
 
   create-macrosB No.-of-initial-macrophages-cells
@@ -1132,7 +827,6 @@ to setupbone[a b]
     setxy x y
     ;setxy random-xcor random-ycor
     setup-macro
-    set age 0
   ]
 
   create-natuksB No.-of-initial-natural-killers-cells [
@@ -1142,7 +836,6 @@ to setupbone[a b]
     setxy x y
     ;setxy random-xcor random-ycor
     setup-natuk
-    set age 0
   ]
 
 end
@@ -1946,10 +1639,10 @@ PENS
 "natural- killers" 1.0 0 -5298144 true "" "plot  count natuksLv"
 
 MONITOR
-9
-492
-121
-537
+10
+548
+122
+593
 No. Th cells
 count th-cells
 17
@@ -1957,12 +1650,12 @@ count th-cells
 11
 
 MONITOR
-10
-551
-122
-596
-No. Tr cells
-count tr-cells
+11
+607
+123
+652
+No. Treg cells
+count treg-cells
 17
 1
 11
@@ -2018,6 +1711,17 @@ MONITOR
 625
 Winner
 (ifelse-value hamilton > 0 [\n  \"Cancer\"\n] hamilton < 0 [\n  \"Immune System\"\n] [\n  \"Empate\"\n])
+17
+1
+11
+
+MONITOR
+10
+491
+122
+536
+No. T cells
+count t-cells
 17
 1
 11
