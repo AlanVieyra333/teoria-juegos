@@ -6,13 +6,10 @@ from cycler import cycler
 from scipy import stats
 import sys
 
-# dirs = ['debil-debil/', 'debil-medio/', 'debil-fuerte/',
-#            'medio-debil/', 'medio-medio/', 'medio-fuerte/',
-#            'fuerte-debil/', 'fuerte-medio/', 'fuerte-fuerte/']
-
 if len(sys.argv) != 2:
-    print("Example use: ./statistics.py debil-debil")
+    print("Example use: ./statistics.py strong-strong")
     exit()
+
 is_cancer_strength = sys.argv[1]
 
 dirs = ['CM_IS_simulation/log/']
@@ -20,7 +17,7 @@ out_dir = 'statistics/' + is_cancer_strength + '/'
 # tumors = ['primary_tumor', 'bone', 'liver', 'lung']
 tumors = ['primary_tumor']
 cols = ['Hamilton Tumor', 'Hamilton IS', 'Hamilton']
-ticks = 30
+ticks = 1 + 30
 
 np.set_printoptions(precision=4)
 # plt.rcParams['axes.prop_cycle'] = cycler(
@@ -35,16 +32,16 @@ def calc_ticks():
     is_level = 0
     cancer_level = 0
 
-    if levels[0] == 'debil':
+    if levels[0] == 'weak':
         is_level = 0
-    elif levels[0] == 'medio':
+    elif levels[0] == 'media':
         is_level = 1
     else:
         is_level = 2
 
-    if levels[1] == 'debil':
+    if levels[1] == 'weak':
         cancer_level = 0
-    elif levels[1] == 'medio':
+    elif levels[1] == 'media':
         cancer_level = 1
     else:
         cancer_level = 2
@@ -191,7 +188,7 @@ def gen_graph(data, title):
 
 
 def gen_bar_graph(data, title):
-    labels = ['IS', 'Cancer', 'Draw']
+    labels = ['IS', 'Cancer', 'Draws']
 
     plt.margins(0, 0.15)
     plt.title(title)
@@ -287,4 +284,4 @@ for dir in dirs:
                       ' (' + is_cancer_strength + ')' + ' - Winners')
 
         # plt.show()
-        export_graph(out_dir + 'CM_IS - ' + tumor)
+        export_graph(out_dir + 'CM_IS - ' + tumor + '_' + is_cancer_strength)

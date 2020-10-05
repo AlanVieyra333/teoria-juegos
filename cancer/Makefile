@@ -1,11 +1,11 @@
 DIR_SIM=CM_IS_simulation
 DIR_DATA=$(DIR_SIM)/data
 EXEC_STATISTICS=./util/statistics.py
-FORCES=fuerte-fuerte fuerte-medio fuerte-debil medio-fuerte medio-medio medio-debil debil-fuerte debil-medio debil-debil
+FORCES=strong-strong media-media weak-weak strong-media media-strong strong-weak weak-strong media-weak weak-media
 
 #all: data $(FORCES)
 #	./start-sim.sh
-all: data $(FORCES)
+all: clean data $(FORCES)
 
 $(FORCES): %:
 	cd $(DIR_SIM) && make strength=$@

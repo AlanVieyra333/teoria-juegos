@@ -54,11 +54,13 @@ globals [
   max-age-tan1
   max-age-tan2
   max-age-nk
+  tumor-growth-factor
   ; T cells
   No.-of-initial-t-cells
   recruit-t-cells
-  AttackSuccesByTCells
+  SuccesOfInterac-tCells-tumor
   max-age-t-cell
+  AttackSuccesByTCells
   ; Treg cells
   No.-of-initial-treg-cells
   recruit-treg-cells
@@ -87,8 +89,6 @@ globals [
   a-gauss-tumor
   ticks-is-spread
   ticks-tumor-spread
-  x0-sigmoide-is ; Punto de inflexión sist. inmune
-  x0-sigmoide-tumor ; Punto de inflexión tumor
   is-cells
   tumor-cells
 ] ; some counts
@@ -146,11 +146,13 @@ to clear-vars
   set max-age-tan1 0
   set max-age-tan2 0
   set max-age-nk 0
+  set tumor-growth-factor 0
   ; T cells
   set No.-of-initial-t-cells 0
   set recruit-t-cells 0
-  set AttackSuccesByTCells 0
+  set SuccesOfInterac-tCells-tumor 0
   set max-age-t-cell 0
+  set AttackSuccesByTCells 0
   ; Treg cells
   set No.-of-initial-treg-cells 0
   set recruit-treg-cells 0
@@ -176,8 +178,6 @@ to clear-vars
   set a-gauss-tumor 0
   set ticks-is-spread 0
   set ticks-tumor-spread 0
-  set x0-sigmoide-is 0.0
-  set x0-sigmoide-tumor 0.0
   set is-cells 0
   set tumor-cells 0
 end
@@ -217,12 +217,12 @@ to init
   print_data_bone counter file_number
 
   ;initialize variables
-  set increase-is 2                ; Incremento del sist. inmune maximo posible.
-  set increase-tumor 2             ; Incremento del tumor maximo posible.
-  set ticks-is-spread 12     ; Ticks necesarios para llegar al valor maximo de la funcion sigmoide para el sist. inmune.
-  set ticks-tumor-spread 12  ; Ticks necesarios para llegar al valor maximo de la funcion sigmoide para el tumor.
-  set a-gauss-is (calc-logistic-proportion increase-is ticks-is-spread x0-sigmoide-is)              ; Cálculo de 'a' de la funcion de gauss para el sist. inmune.
-  set a-gauss-tumor (calc-logistic-proportion increase-tumor ticks-tumor-spread x0-sigmoide-tumor)  ; Cálculo de 'a' de la funcion de gauss para el tumor.
+  set increase-is 3                                         ; Incremento del sist. inmune maximo posible.
+  set increase-tumor 3 * (tumor-growth-factor * 0.01)       ; Incremento del tumor maximo posible.
+  set ticks-is-spread 12                                    ; Ticks necesarios para llegar al valor maximo de la funcion sigmoide para el sist. inmune.
+  set ticks-tumor-spread 12                                 ; Ticks necesarios para llegar al valor maximo de la funcion sigmoide para el tumor.
+  set a-gauss-is (calc-logistic-proportion increase-is ticks-is-spread)           ; Cálculo de 'a' de la funcion de gauss para el sist. inmune.
+  set a-gauss-tumor (calc-logistic-proportion increase-tumor ticks-tumor-spread)  ; Cálculo de 'a' de la funcion de gauss para el tumor.
 
   ;initial conditions of IS and CC cells
   setup-primary -1 1
@@ -342,6 +342,11 @@ to go
 
   ; Cell actions
   mitosis-tumors tumors
+  ;ask tumors [
+  ;  if (count tumors) < (increase-tumor * No.-of-initial-tumor-cells) and random 100 < 30 [
+  ;    hatch 1 [ setup-tumor ]
+  ;  ]
+  ;]
 
   move-neutr
   neutrs-tumors-interc neutrs tumors
@@ -351,17 +356,24 @@ to go
 
   move-natuk natuks -16 16
 
-  ask treg-cells [
-    move-treg-cell
-    attack-treg-cell
-    death-treg-cell
-  ]
+  ; Adaptative immune system
+  ;ask treg-cells [
+  ;  move-treg-cell
+  ;  attack-treg-cell
+  ;  death-treg-cell
+  ;]
 
-  ask th-cells [
-    move-th-cell
-    attack-th-cell
-    death-th-cell
-  ]
+  ;ask th-cells [
+  ;  move-th-cell
+  ;  attack-th-cell
+  ;  death-th-cell
+  ;]
+
+  ;ask t-cells [
+  ;  move-t-cell
+  ;  attack-t-cell
+  ;  death-t-cell
+  ;]
 
   let x cordinates -1 1
   let y cordinates 1 -1
@@ -427,33 +439,21 @@ to mitosis-tumors [tumors-type]
       create-tumors tumor-cells-to-recruit ticks count tumors [
         setxy -16 16
         setup-tumor
-        rt random-float 360
-        fd 0.5
-        set age 0
       ]
     ] is-tumorB? one-of tumors-type [
       create-tumorsB tumor-cells-to-recruit ticks count tumorsB [
         setxy 16 16
         setup-tumor
-        rt random-float 360
-        fd 0.5
-        set age 0
       ]
     ] is-tumorLg? one-of tumors-type [
       create-tumorsLg tumor-cells-to-recruit ticks count tumorsLg [
         setxy -16 -16
         setup-tumor
-        rt random-float 360
-        fd 0.5
-        set age 0
       ]
     ] is-tumorLv? one-of tumors-type [
       create-tumorsLv tumor-cells-to-recruit ticks count tumorsLv [
         setxy 16 -16
         setup-tumor
-        rt random-float 360
-        fd 0.5
-        set age 0
       ]
     ])
  ]
@@ -571,9 +571,6 @@ to neutrs-tumors-interc [neutrs-type tumors-type]
       ;if random 100 < 2 [
       ;  hatch-tumors 1 [
       ;    setup-tumor
-      ;    rt random-float 360
-      ;    fd 0.5
-      ;    set age 0
       ;  ]
       ;]
     ])
@@ -614,51 +611,6 @@ to macros-tumors-interc [macros-type tumors-type]
   ]
 end
 
-to attack [ prey max-age prob-kill]
-  if (must-die? max-age prob-kill) [
-    ask prey [ die ]
-  ]
-end
-
-to death-natuk
-  if must-die? max-age-nk 4 [ die ]
-end
-
-to death-neutr
-  (ifelse tan1? [
-    if (must-die? max-age-tan1 4) [
-      set tan1 tan1 - 1
-      die
-    ]
-  ] tan2? [
-    if (must-die? max-age-tan2 4) [
-      set tan2 tan2 - 1
-      die
-    ]
-  ])
-end
-
-to death-macro
-  (ifelse tam1? [
-    if (must-die? max-age-tam1 4) [
-      set tam1 tam1 - 1
-      die
-    ]
-  ] tam2? [
-    if (must-die? max-age-tam2 4) [
-      set tam2 tam2 - 1
-      die
-    ]
-  ])
-end
-
-to-report must-die? [ maxage prob-kill]
-  if (age > maxage) and (random 100) < prob-kill [ ; Se mata si la edad de la celula es mayor a la edad maxima, en una proporcion igual a la probabilidad de matar.
-    report true
-  ]
-
-  report false
-end
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;here decide if metastasis occurs
@@ -1383,9 +1335,9 @@ Primary tumor cells
 ticks
 number-cells
 0.0
-10.0
+30.0
 0.0
-10.0
+30.0
 true
 true
 "" ""
@@ -1578,9 +1530,9 @@ Bone tumor cells
 ticks
 number-cells
 0.0
-10.0
+30.0
 0.0
-10.0
+30.0
 true
 true
 "" ""
@@ -1601,9 +1553,9 @@ Lung tumor cells
 ticks
 number-cells
 0.0
-10.0
+30.0
 0.0
-10.0
+30.0
 true
 true
 "" ""
@@ -1624,9 +1576,9 @@ Liver tumor cells
 ticks
 number-cells
 0.0
-10.0
+30.0
 0.0
-10.0
+30.0
 true
 true
 "" ""
@@ -1699,7 +1651,7 @@ INPUTBOX
 121
 129
 is-cancer-strength
-fuerte-fuerte
+strong-strong
 1
 0
 String
@@ -2079,7 +2031,7 @@ NetLogo 6.1.1
 @#$#@#$#@
 @#$#@#$#@
 <experiments>
-  <experiment name="debil-debil" repetitions="1" runMetricsEveryStep="false">
+  <experiment name="weak-weak" repetitions="1" runMetricsEveryStep="false">
     <setup>setup</setup>
     <go>go</go>
     <enumeratedValueSet variable="stop-replication?">
@@ -2089,10 +2041,10 @@ NetLogo 6.1.1
       <value value="false"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="is-cancer-strength">
-      <value value="&quot;debil-debil&quot;"/>
+      <value value="&quot;weak-weak&quot;"/>
     </enumeratedValueSet>
   </experiment>
-  <experiment name="debil-medio" repetitions="1" runMetricsEveryStep="false">
+  <experiment name="weak-media" repetitions="1" runMetricsEveryStep="false">
     <setup>setup</setup>
     <go>go</go>
     <enumeratedValueSet variable="stop-replication?">
@@ -2102,10 +2054,10 @@ NetLogo 6.1.1
       <value value="false"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="is-cancer-strength">
-      <value value="&quot;debil-medio&quot;"/>
+      <value value="&quot;weak-media&quot;"/>
     </enumeratedValueSet>
   </experiment>
-  <experiment name="debil-fuerte" repetitions="1" runMetricsEveryStep="false">
+  <experiment name="weak-strong" repetitions="1" runMetricsEveryStep="false">
     <setup>setup</setup>
     <go>go</go>
     <enumeratedValueSet variable="stop-replication?">
@@ -2115,10 +2067,10 @@ NetLogo 6.1.1
       <value value="false"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="is-cancer-strength">
-      <value value="&quot;debil-fuerte&quot;"/>
+      <value value="&quot;weak-strong&quot;"/>
     </enumeratedValueSet>
   </experiment>
-  <experiment name="medio-debil" repetitions="1" runMetricsEveryStep="false">
+  <experiment name="media-weak" repetitions="1" runMetricsEveryStep="false">
     <setup>setup</setup>
     <go>go</go>
     <enumeratedValueSet variable="stop-replication?">
@@ -2128,10 +2080,10 @@ NetLogo 6.1.1
       <value value="false"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="is-cancer-strength">
-      <value value="&quot;medio-debil&quot;"/>
+      <value value="&quot;media-weak&quot;"/>
     </enumeratedValueSet>
   </experiment>
-  <experiment name="medio-medio" repetitions="1" runMetricsEveryStep="false">
+  <experiment name="media-media" repetitions="1" runMetricsEveryStep="false">
     <setup>setup</setup>
     <go>go</go>
     <enumeratedValueSet variable="stop-replication?">
@@ -2141,10 +2093,10 @@ NetLogo 6.1.1
       <value value="false"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="is-cancer-strength">
-      <value value="&quot;medio-medio&quot;"/>
+      <value value="&quot;media-media&quot;"/>
     </enumeratedValueSet>
   </experiment>
-  <experiment name="medio-fuerte" repetitions="1" runMetricsEveryStep="false">
+  <experiment name="media-strong" repetitions="1" runMetricsEveryStep="false">
     <setup>setup</setup>
     <go>go</go>
     <enumeratedValueSet variable="stop-replication?">
@@ -2154,10 +2106,10 @@ NetLogo 6.1.1
       <value value="false"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="is-cancer-strength">
-      <value value="&quot;medio-fuerte&quot;"/>
+      <value value="&quot;media-strong&quot;"/>
     </enumeratedValueSet>
   </experiment>
-  <experiment name="fuerte-fuerte" repetitions="1" runMetricsEveryStep="false">
+  <experiment name="strong-strong" repetitions="1" runMetricsEveryStep="false">
     <setup>setup</setup>
     <go>go</go>
     <enumeratedValueSet variable="stop-replication?">
@@ -2167,10 +2119,10 @@ NetLogo 6.1.1
       <value value="false"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="is-cancer-strength">
-      <value value="&quot;fuerte-fuerte&quot;"/>
+      <value value="&quot;strong-strong&quot;"/>
     </enumeratedValueSet>
   </experiment>
-  <experiment name="fuerte-medio" repetitions="1" runMetricsEveryStep="false">
+  <experiment name="strong-media" repetitions="1" runMetricsEveryStep="false">
     <setup>setup</setup>
     <go>go</go>
     <enumeratedValueSet variable="stop-replication?">
@@ -2180,10 +2132,10 @@ NetLogo 6.1.1
       <value value="false"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="is-cancer-strength">
-      <value value="&quot;fuerte-medio&quot;"/>
+      <value value="&quot;strong-media&quot;"/>
     </enumeratedValueSet>
   </experiment>
-  <experiment name="fuerte-debil" repetitions="1" runMetricsEveryStep="false">
+  <experiment name="strong-weak" repetitions="1" runMetricsEveryStep="false">
     <setup>setup</setup>
     <go>go</go>
     <enumeratedValueSet variable="stop-replication?">
@@ -2193,7 +2145,7 @@ NetLogo 6.1.1
       <value value="false"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="is-cancer-strength">
-      <value value="&quot;fuerte-debil&quot;"/>
+      <value value="&quot;strong-weak&quot;"/>
     </enumeratedValueSet>
   </experiment>
 </experiments>

@@ -1,25 +1,34 @@
-to-report logistic [increase x x0]
-  let a increase - 1.0
-  let k 9                                ; Tasa de crecimiento
+; The domain of the function is (-inf, +inf)
+; The codomain of the function is (1, a + 1)
+; x: is a tick scaled in the range [0,1], 1 is equivalent to ticks-spread (ticks-spread represents
+;    how many ticks are needed to reach the maximum value of the sigmoid function)
+; a: is the maximum value that the sigmoid function can reach
+; b: Determinate the inflexion point. With b=1 the inflexion point is in x=0.5
+to-report logistic [x a b]
+  let k 4  ; Growth rate, values can be in [3,10] so that it behaves correctly
   
-  report 1.0 + ( a / (1.0 + (e ^ (- k * (x - x0)))) )
+  report 1.0 + ( a / (1.0 + b * (e ^ (- k * (x - 0.5)))) )  ; x-0.5 allow the function start increasing from x = 0 aprox.
 end
 
-to-report calc-logistic-proportion [increase ticks-spread x0]
+; increase: is the times to increase
+to-report calc-logistic-proportion [increase ticks-spread]
   set i 0
   let d_x 1.0 / (ticks-spread - 1.0)
   let v_result [1]
+  let a increase - 1.0
+  let b 1
   
   repeat (ticks-spread - 1) [
-    set v_result lput ( logistic increase ((i + 1) * d_x) x0 / logistic increase ((i) * d_x) x0) v_result
+    set v_result lput ( logistic ((i + 1) * d_x) a b / logistic (i * d_x) a b ) v_result
     set i i + 1
   ]
   
   report max v_result - 1.0
 end
 
-to-report gauss-aproximation [x a b]
+to-report gauss-aproximation [x a]
   let c 0.19
+  let b 0.5
   
   let result a * (e ^ ( - ((x - b) ^ 2.0) / (2.0 * (c ^ 2.0) ) ))
   
@@ -31,7 +40,7 @@ to-report tumor-cells-to-recruit [ticks-spreading current-cells]
   let d_x 1.0 / (ticks-tumor-spread - 1.0)  ; ticks-tumor-spread - Ticks totales para llegar al maximo valor de la curva sigmoide.  d_x - Diferencial de x
   let x (ticks-spreading * d_x)             ; ticks-spreading - Ticks de vida del tumor.
   
-  let result int( current-cells * gauss-aproximation x a-gauss-tumor x0-sigmoide-tumor)  ; Aproximacion de la funcion de gauss usando las variables, x, a, y x0 (punto de inflexion)
+  let result int( current-cells * gauss-aproximation x a-gauss-tumor)  ; Aproximacion de la funcion de gauss usando las variables, x, a
   
   if result = 0 and random 100 < 50 [
     set result 1
@@ -46,7 +55,7 @@ to-report is-cells-to-recruit [ticks-spreading current-cells]
   let d_x 1.0 / (ticks-is-spread - 1.0)  ; ticks-tumor-spread - Ticks totales para llegar al maximo valor de la curva sigmoide.  d_x - Diferencial de x
   let x (ticks-spreading * d_x)          ; ticks-spreading - Ticks de vida del sistema inmune.
   
-  let result int( current-cells * gauss-aproximation x a-gauss-is x0-sigmoide-is)  ; Aproximacion de la funcion de gauss usando las variables, x, a, y x0 (punto de inflexion)
+  let result int( current-cells * gauss-aproximation x a-gauss-is)  ; Aproximacion de la funcion de gauss usando las variables, x, a
   set result result / 2.6
   
   if result = 0 and random 100 < 33 [
@@ -74,6 +83,10 @@ to set-initial-values-from-file[filename]
   
   set data csv:from-row file-read-line
   set No.-of-initial-natural-killers-cells item 1 data
+  
+  
+  set data csv:from-row file-read-line
+  set tumor-growth-factor item 1 data
   
   
   set data csv:from-row file-read-line
@@ -153,10 +166,13 @@ to set-initial-values-from-file[filename]
   set recruit-t-cells item 1 data
   
   set data csv:from-row file-read-line
-  set AttackSuccesByTCells item 1 data
+  set SuccesOfInterac-tCells-tumor item 1 data
   
   set data csv:from-row file-read-line
   set max-age-t-cell item 1 data
+  
+  set data csv:from-row file-read-line
+  set AttackSuccesByTCells item 1 data
   
   set data csv:from-row file-read-line
   set No.-of-initial-treg-cells item 1 data
@@ -184,13 +200,6 @@ to set-initial-values-from-file[filename]
   
   set data csv:from-row file-read-line
   set max-age-th-cell item 1 data
-  
-  
-  set data csv:from-row file-read-line
-  set x0-sigmoide-is (item 1 data) * 0.01
-  
-  set data csv:from-row file-read-line
-  set x0-sigmoide-tumor (item 1 data) * 0.01
 end
 
 ; ################## Write output files ##################
